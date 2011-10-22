@@ -101,16 +101,17 @@ namespace NeuralNetworks1 {
         }
 
         private static void BuildPerceptronNetwork(bool unipolar, bool bias, int inputSize, int hiddenLayers, int outputSize, InputDataSet trainingSet, InputDataSet testSet) {
-            var perceptron = new PerceptronWrapper(inputSize, inputSize, hiddenLayers, outputSize, bias, unipolar);
-            perceptron.Train(0.2, 5000, trainingSet);
-            double[][] answers = perceptron.Compute(testSet);
+            throw new NotImplementedException();
+            //var perceptron = new PerceptronWrapper(inputSize, inputSize, hiddenLayers, outputSize, bias, unipolar);
+            //perceptron.Train(0.2, 5000, trainingSet);
+            //double[][] answers = perceptron.Compute(testSet);
 
-            foreach (double[] output in answers) {
-                foreach (double o in output) {
-                    Console.Write("{0:F3} ", o);
-                }
-                Console.WriteLine();
-            }
+            //foreach (double[] output in answers) {
+            //    foreach (double o in output) {
+            //        Console.Write("{0:F3} ", o);
+            //    }
+            //    Console.WriteLine();
+            //}
         }
 
         private static void BuildKohonenNetwork() {
@@ -127,13 +128,14 @@ namespace NeuralNetworks1 {
         }
 
         private static void BuildKohonenNetwork(int inputSize, int neuronCount, InputDataSet trainingSet, InputDataSet testSet) {
-            var kohonen = new KohenenWrapper(neuronCount, inputSize);
-            kohonen.Train(0.05, 1000, 3, trainingSet);
-            int[] answers = kohonen.Compute(testSet);
+            throw new NotImplementedException();
+            //var kohonen = new KohonenWrapper(neuronCount, inputSize);
+            //kohonen.Train(0.05, 1000, 3, trainingSet);
+            //int[] answers = kohonen.Compute(testSet);
 
-            foreach (var i in answers) {
-                Console.WriteLine(i);
-            }
+            //foreach (var i in answers) {
+            //    Console.WriteLine(i);
+            //}
         }
     }
 }

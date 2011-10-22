@@ -48,8 +48,11 @@
   <ItemGroup>
     <Compile Include="InputDataSet.cs" />
     <Compile Include="InputDataSetException.cs" />
-    <Compile Include="KohenenWrapper.cs" />
-    <Compile Include="KohenenWrapperException.cs" />
+    <Compile Include="KohonenNeighbourhoodFunction.cs" />
+    <Compile Include="KohonenWrapper.cs" />
+    <Compile Include="KohonenWrapperException.cs" />
+    <Compile Include="KohonenTrainStrategy.cs" />
+    <Compile Include="MyBasicTrainSOM.cs" />
     <Compile Include="PerceptronWrapper.cs" />
     <Compile Include="PerceptronWrapperException.cs" />
     <Compile Include="Program.cs" />

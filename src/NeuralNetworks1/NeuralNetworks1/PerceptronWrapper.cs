@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Encog.Neural.Networks;
-using Encog.Neural.Networks.Layers;
+﻿using System.Collections.Generic;
 using Encog.Engine.Network.Activation;
 using Encog.ML.Data;
 using Encog.ML.Data.Basic;
+using Encog.Neural.Networks;
+using Encog.Neural.Networks.Layers;
 using Encog.Neural.Networks.Training.Propagation.Back;
 
 namespace NeuralNetworks1 {
@@ -25,7 +22,8 @@ namespace NeuralNetworks1 {
         /// <param name="hiddenLayerSize"></param>
         /// <param name="hiddenLayersNumber"></param>
         /// <param name="outputSize"></param>
-        public PerceptronWrapper(int inputSize, int hiddenLayerSize, int hiddenLayersNumber, int outputSize, bool useBias, bool unipolar) {
+        public PerceptronWrapper(int inputSize, int hiddenLayerSize, int hiddenLayersNumber,
+            int outputSize, bool useBias, bool unipolar) {
             if (inputSize < 1 || outputSize < 1)
                 throw new PerceptronWrapperException("Invalid constructor arguments");
             if (hiddenLayersNumber < 0 || (hiddenLayersNumber > 0 && hiddenLayerSize < 1))
@@ -42,7 +40,8 @@ namespace NeuralNetworks1 {
                 return new ActivationTANH();
         }
 
-        private void CreateFeedforwardNetwork(int inputSize, int hiddenLayerSize, int hiddenLayersNumber, int outputSize, bool useBias, bool unipolar) {
+        private void CreateFeedforwardNetwork(int inputSize, int hiddenLayerSize, int hiddenLayersNumber,
+            int outputSize, bool useBias, bool unipolar) {
             // Budowa sieci
             _network = new BasicNetwork();
 
@@ -63,8 +62,10 @@ namespace NeuralNetworks1 {
         /// </summary>
         /// <param name="learningRate">Stala uczenia (zwykle w okolicach 0.1)</param>
         /// <param name="epochNumber">Na ilu wybranych losowo przykladach uczyc siec</param>
+        /// <param name="momentum">Współczynnik bezwładności.</param>
         /// <param name="dataSet">Dane do nauki sieci</param>
-        public void Train(double learningRate, int epochNumber, InputDataSet dataSet) {
+        public void Train(double learningRate, int epochNumber,
+            double momentum, InputDataSet dataSet) {
             if (learningRate <= 0.0 || epochNumber <= 0)
                 throw new PerceptronWrapperException("Invalid arguments");
             if (_network.InputCount != dataSet.InputDataSize ||
@@ -73,8 +74,7 @@ namespace NeuralNetworks1 {
                     throw new PerceptronWrapperException("Invalid data set size");
 
             IMLDataSet data = new BasicMLDataSet(dataSet.InputSet, dataSet.OutputSet);
-            Backpropagation backprop = new Backpropagation(_network, data);
-            backprop.LearningRate = learningRate;
+            var backprop = new Backpropagation(_network, data, learningRate, momentum);
 
             // Uczymy siec za pomoca backpropagation
             backprop.Iteration(epochNumber);
