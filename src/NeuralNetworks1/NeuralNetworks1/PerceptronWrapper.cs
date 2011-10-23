@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System;
+using System.Linq;
 using Encog.Engine.Network.Activation;
 using Encog.ML.Data;
 using Encog.ML.Data.Basic;
@@ -15,21 +17,16 @@ namespace NeuralNetworks1 {
         // Siec neuronowa z Encog
         private BasicNetwork _network;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="inputSize"></param>
-        /// <param name="hiddenLayerSize"></param>
-        /// <param name="hiddenLayersNumber"></param>
-        /// <param name="outputSize"></param>
-        public PerceptronWrapper(int inputSize, int hiddenLayerSize, int hiddenLayersNumber,
-            int outputSize, bool useBias, bool unipolar) {
+        public PerceptronWrapper(int inputSize, List<int> hiddenLayers, int outputSize, 
+            bool useBias, bool unipolar) {
+            
             if (inputSize < 1 || outputSize < 1)
                 throw new PerceptronWrapperException("Invalid constructor arguments");
-            if (hiddenLayersNumber < 0 || (hiddenLayersNumber > 0 && hiddenLayerSize < 1))
-                throw new PerceptronWrapperException("Invalid constructor arguments");
 
-            CreateFeedforwardNetwork(inputSize, hiddenLayerSize, hiddenLayersNumber, outputSize, useBias, unipolar);
+            if (hiddenLayers.Any(x => x < 1) && hiddenLayers.Count > 0)
+                throw new PerceptronWrapperException("Invalid hidden layer size");
+
+            CreateFeedforwardNetwork(inputSize, hiddenLayers, outputSize, useBias, unipolar);
         }
 
         private IActivationFunction GetActivationFunction(bool unipolar) {
@@ -40,14 +37,14 @@ namespace NeuralNetworks1 {
                 return new ActivationTANH();
         }
 
-        private void CreateFeedforwardNetwork(int inputSize, int hiddenLayerSize, int hiddenLayersNumber,
-            int outputSize, bool useBias, bool unipolar) {
+        private void CreateFeedforwardNetwork(int inputSize, List<int> hiddenLayers, int outputSize, 
+            bool useBias, bool unipolar) {
             // Budowa sieci
             _network = new BasicNetwork();
 
             _network.AddLayer(new BasicLayer(GetActivationFunction(unipolar), useBias, inputSize));
-            for(int i = 0; i < hiddenLayersNumber; i++) {
-                _network.AddLayer(new BasicLayer(GetActivationFunction(unipolar), useBias, hiddenLayerSize));
+            foreach (var size in hiddenLayers) {
+                _network.AddLayer(new BasicLayer(GetActivationFunction(unipolar), useBias, size));
             }
             // No bias in output layer
             _network.AddLayer(new BasicLayer(GetActivationFunction(unipolar), false, outputSize));

@@ -5,70 +5,25 @@ using System.Text;
 using System.Threading;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 
 namespace NeuralNetworks1 {
     class Program {
-        static string AddSlashes(string str) {
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in str) {
-                sb.Append(c);
-                sb.Append('\\');
-            }
-            if (sb.Length > 0)
-                sb.Remove(sb.Length - 1, 1);
-            return sb.ToString();
-        }
+        /// <summary>
+        /// Ilosc argumentow wymagana przez program.
+        /// </summary>
+        private const int ARGUMNENTS_NUMBER = 3; 
 
-        static char AskQuestion(string question, string answers) {
-            answers = answers.ToUpper();
-            string answersToShow = AddSlashes(answers);
-            char userAnsqwer = '?';
-
-            do {
-                Console.Write("{0} [{1}]: ", question, answersToShow);
-                string str = Console.ReadLine();
-                if (str.Length > 0)
-                    userAnsqwer = Char.ToUpper(str[0]);
-            } while (!answers.Contains(userAnsqwer));
-
-            return userAnsqwer;
-        }
-
-        static int AskForNumber(string question, Predicate<int> goodNumber) {
-            int n = 0;
-            bool isNumber = false;
-
-            do {
-                Console.Write("{0} [Liczba]: ", question);
-                string str = Console.ReadLine();
-                isNumber = Int32.TryParse(str, out n);
-            } while (isNumber != true || goodNumber(n) == false);
-
-            return n;
-        }
-
-        static string AskForFileName(string question) {
-            string fileName = String.Empty;
-
-            do {
-                Console.Write("{0} [Podaj nazwę pliku]: ", question);
-                fileName = Console.ReadLine().Trim();
-                
-            } while (File.Exists(fileName) == false);
-
-            return fileName;
-        }
-
-        static void Main(string[] args) {
+        public static void Main(string[] args) {
             try {
+                // Zeby .(kropki) wchodzily w Double.Parse
                 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-                char answer = AskQuestion("Wybierz typ sieci (P - Perceptron, K - Kohonen)", "PK");
-                if (answer == 'K') {
-                    BuildKohonenNetwork();
+                if (args.Length != ARGUMNENTS_NUMBER) {
+                    PrintUsage();
                 }
                 else {
-                    BuildPerceptronNetwork();
+                    GenerateOutput(args[0], args[1], args[2]);
                 }
 
                 Encog.EncogFramework.Instance.Shutdown();
@@ -81,61 +36,59 @@ namespace NeuralNetworks1 {
                 Console.WriteLine(error.ToString());
                 Console.ForegroundColor = oldColor;
             }
-            Console.ReadLine();
         }
 
-        private static void BuildPerceptronNetwork() {
-            bool unipolar = 'U' == AskQuestion("U - Unipolarna, B - Bipolarna funkcja wzmocnienia", "UB");
-            bool bias = 'B' == AskQuestion("B - Zastosuj bias, N - Brak biasu", "BN");
-            int hiddenLayers = AskForNumber("Podaj liczbe warstw ukrytych", (x) => (x >= 0));
-            int inputSize = AskForNumber("Podaj rozmiar WEJSCIA", (x) => (x > 0));
-            int outputSize = AskForNumber("Podaj rozmiar WYJSCIA", (x) => (x > 0));
-
-            string trainingFileName = AskForFileName("Podaj nazwę pliku ze zbiorem UCZACYM");
-            string dataToProcessFileName = AskForFileName("Podaj nazwe pliku ze zbiorem TESTOWYM");
-
-            InputDataSet trainingSet = new InputDataSet(trainingFileName, inputSize, outputSize);
-            InputDataSet testSet = new InputDataSet(dataToProcessFileName, inputSize);
-
-            BuildPerceptronNetwork(unipolar, bias, inputSize, hiddenLayers, outputSize, trainingSet, testSet);
+        private static void GenerateOutput(string configFile, string trainFile, string testFile) {
+            var networkConfig = NetworkConfig.ReadFromFile(configFile);
+                
+            if (networkConfig.Type == NetworkType.Kohonen)
+                BuildKohonenNetwork((KohonenNetwokConfig)networkConfig, trainFile, testFile);
+            else if (networkConfig.Type == NetworkType.Perceptron)
+                BuildPerceptronNetwork((PerceptronNetworkConfig)networkConfig, trainFile, testFile);
         }
 
-        private static void BuildPerceptronNetwork(bool unipolar, bool bias, int inputSize, int hiddenLayers, int outputSize, InputDataSet trainingSet, InputDataSet testSet) {
-            throw new NotImplementedException();
-            //var perceptron = new PerceptronWrapper(inputSize, inputSize, hiddenLayers, outputSize, bias, unipolar);
-            //perceptron.Train(0.2, 5000, trainingSet);
-            //double[][] answers = perceptron.Compute(testSet);
+        private static void BuildKohonenNetwork(KohonenNetwokConfig config, string trainFile, string testFile) {
+            KohonenWrapper kohonen = new KohonenWrapper(config.Height, config.Width, config.InputSize);
 
-            //foreach (double[] output in answers) {
-            //    foreach (double o in output) {
-            //        Console.Write("{0:F3} ", o);
-            //    }
-            //    Console.WriteLine();
-            //}
+            InputDataSet trainData = new InputDataSet(trainFile, config.InputSize);
+            kohonen.Train(config.InitialLearningRate, config.LearningRateDecayFactor,
+                config.InitialNeighbourhood, config.NeighbourhoodDecayFactor,
+                config.Iterations, trainData);
+
+            InputDataSet testData = new InputDataSet(testFile, config.InputSize);
+            int[] classes = kohonen.Compute(testData);
+
+            foreach (var i in classes) {
+                Console.WriteLine(i);
+            }
         }
 
-        private static void BuildKohonenNetwork() {
-            int inputSize = AskForNumber("Podaj rozmiar WEJSCIA", (x) => (x > 0));
-            int neuronCount = AskForNumber("Podaj ilosc neuronow", (x) => (x > 0));
+        private static void BuildPerceptronNetwork(PerceptronNetworkConfig config, string trainFile, string testFile) {
+            PerceptronWrapper perceptron = new PerceptronWrapper(
+                config.InputSize, config.HiddenLayerSizes, config.OutputSize,
+                config.UseBIAS, config.Unipolar
+                );
 
-            string trainingFileName = AskForFileName("Podaj nazwę pliku ze zbiorem UCZACYM");
-            string dataToProcessFileName = AskForFileName("Podaj nazwe pliku ze zbiorem TESTOWYM");
+            InputDataSet trainData = new InputDataSet(trainFile, config.InputSize, config.OutputSize);
+            perceptron.Train(config.LearningRate, config.Iterations, config.Momentum, trainData);
 
-            InputDataSet trainingSet = new InputDataSet(trainingFileName, inputSize);
-            InputDataSet testSet = new InputDataSet(dataToProcessFileName, inputSize);
+            InputDataSet testData = new InputDataSet(testFile, config.InputSize);
+            double[][] results = perceptron.Compute(testData);
 
-            BuildKohonenNetwork(inputSize, neuronCount, trainingSet, testSet);
+            foreach (var outputs in results) {
+                foreach (var output in outputs) {
+                    Console.Write("{0:F3} ", output);
+                }
+                Console.WriteLine();
+            }
         }
 
-        private static void BuildKohonenNetwork(int inputSize, int neuronCount, InputDataSet trainingSet, InputDataSet testSet) {
-            throw new NotImplementedException();
-            //var kohonen = new KohonenWrapper(neuronCount, inputSize);
-            //kohonen.Train(0.05, 1000, 3, trainingSet);
-            //int[] answers = kohonen.Compute(testSet);
 
-            //foreach (var i in answers) {
-            //    Console.WriteLine(i);
-            //}
+        private static void PrintUsage() {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("{0} config_file train_file test_file", Assembly.GetExecutingAssembly().Location);
+            Console.WriteLine("Network answers will be printed on standard output");
         }
+
     }
 }

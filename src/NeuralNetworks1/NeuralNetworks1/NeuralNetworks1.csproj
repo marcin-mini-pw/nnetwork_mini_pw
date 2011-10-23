@@ -53,6 +53,8 @@
     <Compile Include="KohonenWrapperException.cs" />
     <Compile Include="KohonenTrainStrategy.cs" />
     <Compile Include="MyBasicTrainSOM.cs" />
+    <Compile Include="NetworkConfig.cs" />
+    <Compile Include="NetworkConfigException.cs" />
     <Compile Include="PerceptronWrapper.cs" />
     <Compile Include="PerceptronWrapperException.cs" />
     <Compile Include="Program.cs" />
@@ -63,6 +65,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Koho2.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="KohonenConfig.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PerceptronConfig.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestFile.txt">

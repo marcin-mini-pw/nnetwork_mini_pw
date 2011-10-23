@@ -56,6 +56,7 @@ namespace NeuralNetworks1
                 new KohonenNeighbourhoodFunction(neighbourhoodRate, rows, columns);
             var train = new BasicTrainSOM(network, learningRate, basicMlDataSet, neighborhoodFunc);
             IStrategy strategy = new KohonenTrainStrategy(learningChangeRate, neighbourhoodChangeRate);
+            strategy.Init(train);
             train.Strategies.Add(strategy);
 
             train.Iteration(trainIterations);
