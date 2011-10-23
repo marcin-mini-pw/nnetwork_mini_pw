@@ -52,7 +52,6 @@
     <Compile Include="KohonenWrapper.cs" />
     <Compile Include="KohonenWrapperException.cs" />
     <Compile Include="KohonenTrainStrategy.cs" />
-    <Compile Include="MyBasicTrainSOM.cs" />
     <Compile Include="NetworkConfig.cs" />
     <Compile Include="NetworkConfigException.cs" />
     <Compile Include="PerceptronWrapper.cs" />

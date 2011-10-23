@@ -37,7 +37,10 @@ namespace NeuralNetworks1
             int bestY = bestNeuron/columns;
 
             double d = (currentX - bestX)*(currentX - bestX) + (currentY - bestY)*(currentY - bestY);
-            return 1.0 - d/Radius;
+            double tmp = (d < Radius)
+                            ? d/Radius 
+                            : 1.0;
+            return 1.0 - tmp;
         }
 
 

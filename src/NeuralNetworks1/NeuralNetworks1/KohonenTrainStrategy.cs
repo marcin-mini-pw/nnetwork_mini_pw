@@ -51,7 +51,7 @@ namespace NeuralNetworks1
         public void PostIteration()
         {
             basicTrainSOM.LearningRate = basicTrainSOM.LearningRate * learningChangeRate;
-            basicTrainSOM.Neighborhood.Radius = Math.Max(1, basicTrainSOM.Neighborhood.Radius * neighbourhoodChangeRate);
+            basicTrainSOM.Neighborhood.Radius = basicTrainSOM.Neighborhood.Radius*neighbourhoodChangeRate;
         }
 
         public void PreIteration()
