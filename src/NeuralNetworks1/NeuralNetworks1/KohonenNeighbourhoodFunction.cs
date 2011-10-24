@@ -1,4 +1,5 @@
 ﻿using Encog.Neural.SOM.Training.Neighborhood;
+using System;
 
 namespace NeuralNetworks1
 {
@@ -28,6 +29,7 @@ namespace NeuralNetworks1
             this.columns = columns;
         }
 
+        private const double EPSILON = 0.0001f;
 
         public double Function(int currentNeuron, int bestNeuron)
         {
@@ -42,10 +44,11 @@ namespace NeuralNetworks1
                 return 1.0;
             }
 
-            double tmp = (d < Radius)
-                            ? d/Radius 
-                            : 1.0;
-            return 1.0 - tmp;
+            if (Radius < EPSILON) {
+                return 0.0;
+            }
+
+            return Math.Max(1.0 - d / Radius, 0.0);
         }
 
 
