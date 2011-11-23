@@ -10,7 +10,7 @@ namespace NeuralNetworks1
 {
     class KohonenWrapper
     {
-        private Kohonen network;
+        public Kohonen network;
 
         /// <summary>
         /// Liczba neuronów w pionie.

@@ -1,4 +1,4 @@
 ﻿feedforward
 bias unipolar
 2 2 1
-1000 0.9 0.2
+1000 0.1 0.1

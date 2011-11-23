@@ -58,8 +58,13 @@ namespace NeuralNetworks1 {
             InputDataSet testData = new InputDataSet(testFile, config.InputSize);
             int[] classes = kohonen.Compute(testData);
 
+            
+
             foreach (var i in classes) {
-                Console.WriteLine(i);
+                Console.Write("({0}): ", i);
+                for (int k = 0; k < config.InputSize; k++)
+                    Console.Write("{0:F3} ", kohonen.network.Weights.Data[k][i]);
+                Console.WriteLine();
             }
         }
 
