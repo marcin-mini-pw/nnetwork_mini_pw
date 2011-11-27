@@ -1,0 +1,4 @@
+feedforward 
+nobias unipolar
+2 1
+1000 0.1 0.1

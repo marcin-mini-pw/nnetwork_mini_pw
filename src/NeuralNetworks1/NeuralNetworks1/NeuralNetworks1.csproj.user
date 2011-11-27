@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <StartArguments>KohonenConfig.txt Koho.txt Koho2.txt</StartArguments>
+    <StartArguments>NAND_unipolar_config_nobias.txt NAND_training.txt NAND_testing.txt</StartArguments>
   </PropertyGroup>
 </Project>
