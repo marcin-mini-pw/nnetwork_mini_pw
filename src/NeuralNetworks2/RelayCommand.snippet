@@ -1,0 +1,45 @@
+﻿<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2008/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>RelayCommand</Title>
+      <Shortcut>rlcmd</Shortcut>
+      <Description>RelayCommand (no Can method)</Description>
+    </Header>
+    <Snippet>
+      <References>
+      </References>
+      <Imports>
+        <Import>
+          <Namespace>NeuralNetworks2.UI.Tools</Namespace>
+        </Import>
+      </Imports>
+      <Declarations>
+        <Literal>
+          <ID>command</ID>
+          <ToolTip>Name of the private field (without the Command sufix).</ToolTip>
+          <Default>command</Default>
+        </Literal>
+        <Literal>
+          <ID>Command</ID>
+          <ToolTip>Name of the public property (without the Command sufix) and of the method.</ToolTip>
+          <Default>Command</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="CSharp">
+        <![CDATA[
+        private RelayCommand $command$Command;
+        public ICommand $Command$Command
+        {
+            get { return $command$Command ??
+                         ($command$Command = new RelayCommand(param => $Command$())); }
+        }
+        
+        private void $Command$()
+        {
+            $end$  
+        }
+        ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
