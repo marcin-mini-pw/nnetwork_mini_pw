@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace NeuralNetworks2.UI.Tools
+namespace NeuralNetworks2.API.Tools
 {
     [DebuggerStepThrough]
     public static class PropertyHelper

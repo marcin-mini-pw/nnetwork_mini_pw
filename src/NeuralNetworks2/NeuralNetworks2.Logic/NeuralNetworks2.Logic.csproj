@@ -31,6 +31,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="alglibnet2">
+      <HintPath>.\alglibnet2.dll</HintPath>
+    </Reference>
+    <Reference Include="encog-core-cs">
+      <HintPath>.\encog-core-cs.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio">
+      <HintPath>.\NAudio.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,8 +49,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AudioLogic.cs" />
+    <Compile Include="AudioRecorder.cs" />
+    <Compile Include="AlgorithmsLogic.cs" />
+    <Compile Include="FileIOLogic.cs" />
+    <Compile Include="LightWaveFileReader.cs" />
+    <Compile Include="LightWaveFileReaderException.cs" />
+    <Compile Include="MFCCCoefficients.cs" />
+    <Compile Include="MFCCUtils.cs" />
+    <Compile Include="PerceptronWrapper.cs" />
+    <Compile Include="PerceptronWrapperException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TriFilterBank.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NeuralNetworks2.API\NeuralNetworks2.API.csproj">

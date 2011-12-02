@@ -59,7 +59,6 @@
       <DependentUpon>AlgorithmInitWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Tools\LogicProvider.cs" />
-    <Compile Include="Tools\PropertyHelper.cs" />
     <Compile Include="Tools\RelayCommand.cs" />
     <Compile Include="ViewModels\AlgorithmInitWindowViewModel.cs" />
     <Compile Include="ViewModels\AlgorithmParamsViewModel.cs" />

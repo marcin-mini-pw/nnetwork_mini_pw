@@ -3,12 +3,9 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 using NeuralNetworks2.API.Tools;
 
-namespace NeuralNetworks2.UI.ViewModels
+namespace NeuralNetworks2.API.Model
 {
-    /// <summary>
-    /// Bazowy ViewModel.
-    /// </summary>
-    public abstract class BaseViewModel: INotifyPropertyChanged
+    public class BaseModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

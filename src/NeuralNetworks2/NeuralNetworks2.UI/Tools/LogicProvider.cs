@@ -1,4 +1,4 @@
-﻿using NeuralNetworks2.API;
+﻿using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.Logic;
 
 namespace NeuralNetworks2.UI.Tools
@@ -27,14 +27,14 @@ namespace NeuralNetworks2.UI.Tools
         }
 
 
-        public IAudioLogic AudioLogic { get; private set; }
-        //NOTE: tutaj dodać kolejne
+        public IFileIOLogic FileIOLogic { get; private set; }
+        public IAlgorithmsLogic AlgorithmsLogic { get; private set; }
 
 
         private LogicProvider()
         {
-            AudioLogic = new AudioLogic();
-            //TODO: tutaj dodać kolejne
+            FileIOLogic = new FileIOLogic();
+            AlgorithmsLogic = new AlgorithmsLogic();
         }
     }
 }

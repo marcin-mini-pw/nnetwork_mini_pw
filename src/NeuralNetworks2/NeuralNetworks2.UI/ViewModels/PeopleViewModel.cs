@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Media.Imaging;
 
 namespace NeuralNetworks2.UI.ViewModels
 {
@@ -10,5 +11,6 @@ namespace NeuralNetworks2.UI.ViewModels
     /// </summary>
     public class PeopleViewModel: BaseViewModel
     {
+
     }
 }
