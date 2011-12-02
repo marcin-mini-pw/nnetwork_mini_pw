@@ -1,8 +1,10 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Windows.Media.Imaging;
 
 namespace NeuralNetworks2.API.Model
 {
+    [Serializable]
     public class Person : BaseModel
     {
         private string firstName;

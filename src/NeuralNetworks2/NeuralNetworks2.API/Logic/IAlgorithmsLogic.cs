@@ -13,6 +13,11 @@ namespace NeuralNetworks2.API.Logic
         void Init(IList<Person> peopleToBeRecognized, AlgorithmParams algParams);
 
         /// <summary>
+        /// Resetule logikę (usuwa zbudowane sieci neuronowe itp.). Potem jest potrzebna nowa inicjalizacja.
+        /// </summary>
+        void Reset();
+
+        /// <summary>
         /// Uczy wszystkie zbudowane sieci rozpoznawania przypisanych do nich osób.
         /// </summary>
         /// <returns>Słownik [Osoba, błąd sieci odpowiadającej tej osobie na zbiorze testowym].</returns>

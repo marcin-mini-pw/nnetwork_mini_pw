@@ -1,6 +1,9 @@
-﻿
+﻿using System;
+
+
 namespace NeuralNetworks2.API.Model
 {
+    [Serializable]
     public class AlgorithmParams : BaseModel
     {
         private double learningRate;

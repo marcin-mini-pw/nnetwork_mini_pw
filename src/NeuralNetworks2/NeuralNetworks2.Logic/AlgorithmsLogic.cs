@@ -10,7 +10,7 @@ using NeuralNetworks2.API.Model;
 
 namespace NeuralNetworks2.Logic
 {
-    public class AlgorithmsLogic: IAlgorithmsLogic
+    public class AlgorithmsLogic : IAlgorithmsLogic
     {
         /// <summary>
         /// Liczba wyjść pojedynczej sieci neuronowej.
@@ -104,7 +104,7 @@ namespace NeuralNetworks2.Logic
                 throw new ArgumentNullException("peopleToBeRecognized");
             }
 
-            if(!peopleToBeRecognized.Any())
+            if (!peopleToBeRecognized.Any())
             {
                 throw new ArgumentOutOfRangeException("peopleToBeRecognized", "You should assign at least one person.");
             }
@@ -125,12 +125,30 @@ namespace NeuralNetworks2.Logic
         }
 
         /// <summary>
+        /// Resetule logikę (usuwa zbudowane sieci neuronowe itp.). Potem jest potrzebna nowa inicjalizacja.
+        /// </summary>
+        public void Reset()
+        {
+            if (WasAudioRecordingStarted)
+            {
+                audioRecorder.StopRecording();
+                WasAudioRecordingStarted = false;
+            }
+
+            WasTrained = false;
+
+            neuralNetworks = null;
+            people = null;
+            algorithmParams = null;
+        }
+
+        /// <summary>
         /// Uczy wszystkie zbudowane sieci rozpoznawania przypisanych do nich osób.
         /// </summary>
         /// <returns>Słownik [Osoba, błąd sieci odpowiadającej tej osobie na zbiorze testowym].</returns>
         public IDictionary<Person, double> Train()
         {
-            if(!WasInitialized)
+            if (!WasInitialized)
             {
                 throw new InvalidOperationException("You have to initialize logic first!");
             }
@@ -157,7 +175,7 @@ namespace NeuralNetworks2.Logic
                         Person otherPerson = people[otherPersonInd];
                         if (otherPerson == person)
                         {
-                            otherPerson = people[(otherPersonInd + 1)%neuralNetworks.Count];
+                            otherPerson = people[(otherPersonInd + 1) % neuralNetworks.Count];
                         }
                         personMfccs = trainingMfccs[otherPerson];
                     }
@@ -168,7 +186,7 @@ namespace NeuralNetworks2.Logic
                         expectedAnswers[i] = expectedAnswer;
                     }
                     network.Train(algorithmParams.LearningRate, 1, algorithmParams.Momentum, personMfccs,
-                                  new[] {expectedAnswers});
+                                  new[] { expectedAnswers });
                     error = Test(person, testMfccs);
                     iterations++;
                 }
@@ -217,10 +235,11 @@ namespace NeuralNetworks2.Logic
             foreach (Person person in people)
             {
                 PerceptronWrapper network = neuralNetworks[person];
-                double networkRes = network.Compute(new[] {mfccs})[0][0];
+                double networkRes = network.Compute(new[] { mfccs })[0][0];
                 results.Add(person, networkRes);
             }
 
+            WasAudioRecordingStarted = false;
             return results;
         }
 
@@ -241,17 +260,17 @@ namespace NeuralNetworks2.Logic
 
         private int GetNetworksInputSize()
         {
-            return algorithmParams.MfccCount*algorithmParams.SignalFramesCount;
+            return algorithmParams.MfccCount * algorithmParams.SignalFramesCount;
         }
 
         private int[] GetLayersCount(int inputSize)
         {
-            var inputSizeD = (double) inputSize;
+            var inputSizeD = (double)inputSize;
             var layers = new int[HiddenLayerNeuronsCountCoefs.Length];
 
-            for(int i = 0; i < layers.Length; ++i)
+            for (int i = 0; i < layers.Length; ++i)
             {
-                layers[i] = Convert.ToInt32(inputSizeD/HiddenLayerNeuronsCountCoefs[i]);
+                layers[i] = Convert.ToInt32(inputSizeD / HiddenLayerNeuronsCountCoefs[i]);
             }
 
             return layers;
@@ -383,7 +402,7 @@ namespace NeuralNetworks2.Logic
                 testsCount += result.Length;
             }
 
-            return error/testsCount; //TODO: przemyśleć, czy zwracanie tutaj średniej arytmetycznej jest dobrym pomysłem
+            return error / testsCount; //TODO: przemyśleć, czy zwracanie tutaj średniej arytmetycznej jest dobrym pomysłem
         }
     }
 }
