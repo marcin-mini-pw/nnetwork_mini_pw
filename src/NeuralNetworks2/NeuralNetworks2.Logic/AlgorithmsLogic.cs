@@ -180,13 +180,14 @@ namespace NeuralNetworks2.Logic
                         personMfccs = trainingMfccs[otherPerson];
                     }
 
-                    var expectedAnswers = new double[personMfccs.Length];
+                    var expectedAnswers = new double[personMfccs.Length][];
                     for (int i = 0; i < expectedAnswers.Length; ++i)
                     {
-                        expectedAnswers[i] = expectedAnswer;
+                        expectedAnswers[i] = new [] {expectedAnswer};
                     }
                     network.Train(algorithmParams.LearningRate, 1, algorithmParams.Momentum, personMfccs,
-                                  new[] { expectedAnswers });
+                                  expectedAnswers);
+
                     error = Test(person, testMfccs);
                     iterations++;
                 }
@@ -220,8 +221,9 @@ namespace NeuralNetworks2.Logic
         /// <summary>
         /// Kończy nagrywanie dźwięku z mikrofonu.
         /// </summary>
-        /// <returns>Rezultaty zwrócone przez sieci odpowiadające poszczególnym osobom.</returns>
-        public IDictionary<Person, double> StopRecordingAndGetResults()
+        /// <returns>Rezultaty zwrócone przez sieci odpowiadające poszczególnym osobom.
+        /// Posortowane od najlepszych do najsłabszych wyników.</returns>
+        public IList<Tuple<Person, double>> StopRecordingAndGetResults()
         {
             if (!WasAudioRecordingStarted)
             {
@@ -230,15 +232,16 @@ namespace NeuralNetworks2.Logic
 
             var stream = audioRecorder.StopRecording();
             double[] mfccs = GetMfccsFromStream(stream);
-            var results = new Dictionary<Person, double>();
+            var results = new List<Tuple<Person, double>>();
 
             foreach (Person person in people)
             {
                 PerceptronWrapper network = neuralNetworks[person];
                 double networkRes = network.Compute(new[] { mfccs })[0][0];
-                results.Add(person, networkRes);
+                results.Add(new Tuple<Person, double>(person, networkRes));
             }
 
+            results.Sort((x, y) => y.Item2.CompareTo(x.Item2));
             WasAudioRecordingStarted = false;
             return results;
         }

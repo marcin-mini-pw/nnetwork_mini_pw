@@ -1,8 +1,11 @@
-﻿<Window x:Class="NeuralNetworks2.UI.AlgorithmInitWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:views="clr-namespace:NeuralNetworks2.UI.Views"
-        >
+﻿<Window
+    x:Class="NeuralNetworks2.UI.Windows.AlgorithmInitWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:NeuralNetworks2.UI.Views"
+    Title="Nowy algorytm"
+    >
+    
     <Grid>
         <Grid.Resources>
             <Storyboard x:Key="ShowAlgorithmParamsBorderStoryboard">

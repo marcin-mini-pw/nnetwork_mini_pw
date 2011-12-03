@@ -9,22 +9,155 @@
             <RowDefinition Height="100" />
         </Grid.RowDefinitions>
         
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-        </Grid>
+        <ListBox
+            Grid.Row="0"
+            ItemsSource="{Binding Results}"
+            >
+            <ListBox.Resources>
+                <Style
+                    TargetType="ListBoxItem"
+                    >
+                    <Style.Resources>
+                        <!-- SelectedItem with focus -->
+                        <SolidColorBrush
+                            x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                            Color="Transparent"
+                            />
+                        <!-- SelectedItem without focus -->
+                        <SolidColorBrush
+                            x:Key="{x:Static SystemColors.ControlBrushKey}"
+                            Color="Transparent"
+                            />
+                        <!-- SelectedItem text foreground -->
+                        <SolidColorBrush
+                            x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                            Color="Black"
+                            />
+                    </Style.Resources>
+                    
+                    <Setter
+                        Property="FocusVisualStyle"
+                        Value="{x:Null}"
+                        />
+                    <Setter
+                        Property="Margin"
+                        Value="20,0,20,0"
+                        />
+                </Style>
+            </ListBox.Resources>
+
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel
+                        Orientation="Horizontal"
+                        />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid
+                            Grid.Row="0"
+                            Width="150"
+                            Height="200"
+                            >
+                            <Image
+                                Source="{Binding Item1.Image,
+                                    TargetNullValue='pack://application:,,,/Images/Person_NoPhotoAvailable.png'}"
+                                Margin="10"
+                                >
+                                <Image.BitmapEffect>
+                                    <DropShadowBitmapEffect />
+                                </Image.BitmapEffect>
+                            </Image>
+                        </Grid>
+                        
+                        <TextBlock
+                            Grid.Row="1"
+                            FontSize="20"
+                            Text="{Binding Item1.FullName}"
+                            HorizontalAlignment="Center"
+                            />
+                        
+                        <TextBlock
+                            Grid.Row="2"
+                            FontSize="18"
+                            HorizontalAlignment="Center"
+                            Text="{Binding Item2, StringFormat=P}"
+                            />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         
         <Grid Grid.Row="1">
+            <Grid.Resources>
+                <Style
+                    x:Key="ListeningButton"
+                    TargetType="{x:Type Button}"
+                    >
+                    <Setter
+                        Property="Width"
+                        Value="150"
+                        />
+                    <Setter
+                        Property="Height"
+                        Value="30"
+                        />
+                </Style>
+            </Grid.Resources>
             <Button
-                Width="100"
-                Height="30"
-                Content="Nasłuchuj"
-                />
+                Content="Rozpocznij nagrywanie"
+                Command="{Binding StartListeningCommand}"
+                >
+                <Button.Style>
+                    <Style 
+                        TargetType="{x:Type Button}"
+                        BasedOn="{StaticResource ListeningButton}"
+                        >
+                        <Style.Triggers>
+                            <DataTrigger
+                                Binding="{Binding IsListening}"
+                                Value="True"
+                                >
+                                <Setter
+                                    Property="Visibility"
+                                    Value="Collapsed"
+                                    />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button
+                Content="Zakończ nagrywanie"
+                Command="{Binding StopListeningCommand}"
+                >
+                <Button.Style>
+                    <Style 
+                        TargetType="{x:Type Button}"
+                        BasedOn="{StaticResource ListeningButton}"
+                        >
+                        <Style.Triggers>
+                            <DataTrigger
+                                Binding="{Binding IsListening}"
+                                Value="False"
+                                >
+                                <Setter
+                                    Property="Visibility"
+                                    Value="Collapsed"
+                                    />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
         </Grid>
     </Grid>
 </UserControl>

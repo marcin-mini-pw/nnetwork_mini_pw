@@ -1,0 +1,36 @@
+﻿<Window x:Class="NeuralNetworks2.UI.Windows.TestsResultsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Wyniki dla danych testowych"
+        WindowStartupLocation="CenterOwner"
+        Height="300"
+        Width="300"
+        >
+    <DockPanel
+        LastChildFill="True"
+        >
+        <Button
+            DockPanel.Dock="Bottom"
+            Content="Zamknij"
+            Command="{Binding CloseCommand}"
+            Width="150"
+            />
+        
+        <ListView
+            ItemsSource="{Binding TestsResults}"
+            >
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn
+                        Header="Osoba"
+                        DisplayMemberBinding="{Binding Path=Key.FullName}"
+                        />
+                    <GridViewColumn
+                        Header="Średni błąd sieci"
+                        DisplayMemberBinding="{Binding Path=Value}"
+                        />
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
+</Window>

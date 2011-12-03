@@ -6,9 +6,10 @@ namespace NeuralNetworks2.Logic
 {
     internal class AudioRecorder
     {
+        private const string FileName = "recordedAudio.wav";
+
         private WaveIn waveInStream;
         private WaveFileWriter writer;
-        private MemoryStream stream;
 
 
         public bool IsRecording
@@ -22,8 +23,7 @@ namespace NeuralNetworks2.Logic
         public void StartRecording()
         {
             waveInStream = new WaveIn();
-            stream = new MemoryStream();
-            writer = new WaveFileWriter(stream, waveInStream.WaveFormat);
+            writer = new WaveFileWriter(FileName, waveInStream.WaveFormat);
 
             waveInStream.DataAvailable += WaveInStream_DataAvailable;
 
@@ -44,9 +44,7 @@ namespace NeuralNetworks2.Logic
             writer.Close();
             writer = null;
 
-            var result = stream;
-            stream = null;
-            return result;
+            return new FileStream(FileName, FileMode.Open);
         }
 
 

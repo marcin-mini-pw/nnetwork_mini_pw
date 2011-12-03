@@ -116,5 +116,15 @@ namespace NeuralNetworks2.API.Model
                 OnPropertyChanged<AlgorithmParams>(x => x.SignalFramesCount);
             }
         }
+
+
+        public void CopyFrom(AlgorithmParams algorithmParams)
+        {
+            LearningRate = algorithmParams.LearningRate;
+            Momentum = algorithmParams.Momentum;
+            MfccCount = algorithmParams.MfccCount;
+            TCoef = algorithmParams.TCoef;
+            SignalFramesCount = algorithmParams.SignalFramesCount;
+        }
     }
 }

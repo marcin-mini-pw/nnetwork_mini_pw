@@ -55,7 +55,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AlgorithmInitWindow.xaml.cs">
+    <Compile Include="Windows\AlgorithmInitWindow.xaml.cs">
       <DependentUpon>AlgorithmInitWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Tools\LogicProvider.cs" />
@@ -67,6 +67,7 @@
     <Compile Include="ViewModels\ListeningToVoicesViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\PeopleViewModel.cs" />
+    <Compile Include="ViewModels\TestsResultsWindowViewModel.cs" />
     <Compile Include="Views\AlgorithmParamsView.xaml.cs">
       <DependentUpon>AlgorithmParamsView.xaml</DependentUpon>
     </Compile>
@@ -76,11 +77,14 @@
     <Compile Include="Views\PeopleView.xaml.cs">
       <DependentUpon>PeopleView.xaml</DependentUpon>
     </Compile>
-    <Page Include="AlgorithmInitWindow.xaml">
+    <Compile Include="Windows\TestsResultsWindow.xaml.cs">
+      <DependentUpon>TestsResultsWindow.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Windows\AlgorithmInitWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -88,7 +92,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -101,6 +105,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PeopleView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\TestsResultsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -139,7 +147,15 @@
       <Name>NeuralNetworks2.Logic</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Converters\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Person_NoPhotoAvailable.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\play.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NeuralNetworks2.API.Model;
 
 namespace NeuralNetworks2.API.Logic
@@ -31,7 +32,8 @@ namespace NeuralNetworks2.API.Logic
         /// <summary>
         /// Kończy nagrywanie dźwięku z mikrofonu.
         /// </summary>
-        /// <returns>Rezultaty zwrócone przez sieci odpowiadające poszczególnym osobom.</returns>
-        IDictionary<Person, double> StopRecordingAndGetResults();
+        /// <returns>Rezultaty zwrócone przez sieci odpowiadające poszczególnym osobom.
+        /// Posortowane od najlepszych do najsłabszych wyników.</returns>
+        IList<Tuple<Person, double>> StopRecordingAndGetResults();
     }
 }

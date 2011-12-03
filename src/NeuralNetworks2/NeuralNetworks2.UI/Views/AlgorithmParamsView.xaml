@@ -1,9 +1,129 @@
-﻿<UserControl x:Class="NeuralNetworks2.UI.Views.AlgorithmParamsView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             DataContext="{Binding AlgorithmParamsViewModel}"
-             >
-    <Grid>
-        <TextBlock Foreground="Red" Text="Parametry algorytmu." />
-    </Grid>
+﻿<UserControl 
+    x:Class="NeuralNetworks2.UI.Views.AlgorithmParamsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    DataContext="{Binding AlgorithmParamsViewModel}"
+    >
+    
+    <DockPanel
+        LastChildFill="True"
+        >
+        <ToolBar
+            DockPanel.Dock="Top"
+            ToolBarTray.IsLocked="True"
+            >
+            <Button
+                Content="save"
+                Command="{Binding SaveToFileCommand}"
+                />
+            <Button
+                Content="read"
+                Command="{Binding GetFromFileCommand}"
+                />
+        </ToolBar>
+        
+        <Grid
+            DataContext="{Binding AlgorithmParams}"
+            >
+            <Grid.Resources>
+                <Style TargetType="{x:Type TextBox}">
+                    <Setter
+                        Property="Width"
+                        Value="200"
+                        />
+                    <Setter
+                        Property="HorizontalAlignment"
+                        Value="Left"
+                        />
+                    <Setter
+                        Property="VerticalAlignment"
+                        Value="Center"
+                        />
+                    <Setter 
+                        Property="Margin"
+                        Value="3"
+                        />
+                </Style>
+                <Style TargetType="{x:Type TextBlock}">
+                    <Setter
+                        Property="HorizontalAlignment"
+                        Value="Right"
+                        />
+                    <Setter
+                        Property="VerticalAlignment"
+                        Value="Center"
+                        />
+                </Style>
+            </Grid.Resources>
+            
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                Text="Współczynnik nauki:"
+                />
+            
+            <TextBox
+                Grid.Row="0"
+                Grid.Column="1"
+                Text="{Binding LearningRate, UpdateSourceTrigger=PropertyChanged}"
+                />
+
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="0"
+                Text="Moment alg. wstecznej propagacji błędów:"
+                />
+            <TextBox
+                Grid.Row="1"
+                Grid.Column="1"
+                Text="{Binding Momentum, UpdateSourceTrigger=PropertyChanged}"
+                />
+
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="0"
+                Text="Ilość współczynników MFCC:"
+                />
+            <TextBox
+                Grid.Row="2"
+                Grid.Column="1"
+                Text="{Binding MfccCount, UpdateSourceTrigger=PropertyChanged}"
+                />
+
+            <TextBlock
+                Grid.Row="3"
+                Grid.Column="0"
+                Text="Współczynnik znajomości:"
+                />
+            <TextBox
+                Grid.Row="3"
+                Grid.Column="1"
+                Text="{Binding TCoef, UpdateSourceTrigger=PropertyChanged}"
+                />
+
+            <TextBlock
+                Grid.Row="4"
+                Grid.Column="0"
+                Text="Liczba ramek sygnału mowy:"
+                />
+            <TextBox
+                Grid.Row="4"
+                Grid.Column="1"
+                Text="{Binding SignalFramesCount, UpdateSourceTrigger=PropertyChanged}"
+                />
+        </Grid>
+    </DockPanel>
 </UserControl>

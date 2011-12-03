@@ -5,8 +5,10 @@ using NeuralNetworks2.API.Tools;
 
 namespace NeuralNetworks2.API.Model
 {
+    [Serializable]
     public class BaseModel : INotifyPropertyChanged
     {
+        [field: NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)

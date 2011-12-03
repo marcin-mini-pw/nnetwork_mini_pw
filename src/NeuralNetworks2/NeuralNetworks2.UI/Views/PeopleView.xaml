@@ -1,9 +1,268 @@
 ﻿<UserControl x:Class="NeuralNetworks2.UI.Views.PeopleView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              DataContext="{Binding PeopleViewModel}"
              >
     <Grid>
-        <TextBlock Foreground="Red" Text="Ludzie do rozpoznawania." />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="20" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" MinWidth="20" />
+        </Grid.ColumnDefinitions>
+        
+        <DockPanel
+            Grid.Column="0"
+            LastChildFill="True"
+            >
+            <ToolBar
+                DockPanel.Dock="Top"
+                ToolBarTray.IsLocked="True"
+                >
+                <Button
+                    Content="+"
+                    Command="{Binding AddNewPersonCommand}"
+                    />
+                <Button
+                    Content="-"
+                    Command="{Binding DeletePersonCommand}"
+                    />
+                <Button
+                    Content="save"
+                    Command="{Binding SaveToFileCommand}"
+                    />
+                <Button
+                    Content="read"
+                    Command="{Binding GetFromFileCommand}"
+                    />
+            </ToolBar>
+            
+            <ListBox
+                ItemsSource="{Binding People}"
+                IsSynchronizedWithCurrentItem="True"
+                >
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock
+                            Text="{Binding FullName}"
+                            />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+        
+        <GridSplitter 
+            Grid.Column="1"
+            ResizeDirection="Columns"
+            Height="Auto"
+            Width="3"
+            VerticalAlignment="Stretch"
+            HorizontalAlignment="Stretch"
+            />
+        
+        <Grid 
+            Grid.Column="2"
+            >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            
+            <TextBlock Grid.Row="0">Dane:</TextBlock>
+            
+            <StackPanel
+                Grid.Row="1"
+                >
+                <Grid
+                    Width="150"
+                    Height="200"
+                    >
+                    <Image
+                        Source="{Binding People.CurrentItem.Image,
+                            TargetNullValue='pack://application:,,,/Images/Person_NoPhotoAvailable.png'}"
+                        Margin="10"
+                        >
+                        <Image.BitmapEffect>
+                            <DropShadowBitmapEffect />
+                        </Image.BitmapEffect>
+                    </Image>
+                </Grid>
+
+                <Button
+                    Content="Zmień obraz..."
+                    Command="{Binding ChangeImageCommand}"
+                    Width="120"
+                    />
+            </StackPanel>
+            
+            <Grid
+                Grid.Row="2"
+                >
+
+                <Grid.Resources>
+                    <!-- TODO: Może lepiej jednak dorobić to jako przyciski na toolbarach. Albo w ogóle tego nie dorabiać.-->
+                    <!--<DataTemplate x:Key="WavePath">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                Grid.Column="0"
+                                Name="WavePathTextBlock"
+                                Text="{Binding}"
+                                />
+
+                            <Button
+                                Grid.Column="1"
+                                Height="18"
+                                Width="18"
+                                >
+                                <Button.Content>
+                                    <Image
+                                        Source="pack://application:,,,/Images/play.png"
+                                        />
+                                </Button.Content>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>-->
+                    
+                    <Style TargetType="{x:Type TextBox}">
+                        <Setter
+                            Property="VerticalAlignment"
+                            Value="Center"
+                            />
+                        <Setter 
+                            Property="Margin"
+                            Value="3"
+                            />
+                    </Style>
+                    <Style TargetType="{x:Type TextBlock}">
+                        <Setter
+                            Property="HorizontalAlignment"
+                            Value="Right"
+                            />
+                    </Style>
+                    <Style TargetType="{x:Type DockPanel}">
+                        <Setter 
+                            Property="Margin"
+                            Value="3"
+                            />
+                    </Style>
+                </Grid.Resources>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Text="Imię:"
+                    VerticalAlignment="Center"
+                    />
+                <TextBox
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Text="{Binding People.CurrentItem.FirstName, UpdateSourceTrigger=PropertyChanged}"
+                    />
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Text="Nazwisko:"
+                    VerticalAlignment="Center"
+                    />
+                <TextBox
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Text="{Binding People.CurrentItem.SurName, UpdateSourceTrigger=PropertyChanged}"
+                    />
+                
+                <TextBlock
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Text="Próbki treningowe:"
+                    />
+                <DockPanel
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    LastChildFill="True"
+                    >
+                    <ToolBar
+                        DockPanel.Dock="Top"
+                        ToolBarTray.IsLocked="True"
+                        >
+                        <Button
+                            Content="+"
+                            Command="{Binding AddNewWaveFileCommand}"
+                            >
+                            <Button.CommandParameter>
+                                <sys:Boolean>True</sys:Boolean>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button
+                            Content="-"
+                            Command="{Binding RemoveWaveFileCommand}"
+                            >
+                            <Button.CommandParameter>
+                                <sys:Boolean>True</sys:Boolean>
+                            </Button.CommandParameter>
+                        </Button>
+                    </ToolBar>
+                    <ListBox
+                        ItemsSource="{Binding People.CurrentItem.TrainWavesPaths}"
+                        IsSynchronizedWithCurrentItem="True"
+                        /> <!--ItemTemplate="{StaticResource WavePath}"-->
+                </DockPanel>
+
+                <TextBlock
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Text="Próbki testowe:"
+                    />
+                <DockPanel
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    LastChildFill="True"
+                    >
+                    <ToolBar
+                        DockPanel.Dock="Top"
+                        ToolBarTray.IsLocked="True"
+                        >
+                        <Button
+                            Content="+"
+                            Command="{Binding AddNewWaveFileCommand}"
+                            >
+                            <Button.CommandParameter>
+                                <sys:Boolean>False</sys:Boolean>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button
+                            Content="-"
+                            Command="{Binding RemoveWaveFileCommand}"
+                            >
+                            <Button.CommandParameter>
+                                <sys:Boolean>False</sys:Boolean>
+                            </Button.CommandParameter>
+                        </Button>
+                    </ToolBar>
+                    <ListBox
+                        ItemsSource="{Binding People.CurrentItem.TestWavesPaths}"
+                        IsSynchronizedWithCurrentItem="True"
+                        /> <!--ItemTemplate="{StaticResource WavePath}"-->
+                </DockPanel>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>

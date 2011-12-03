@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Windows.Input;
+using NeuralNetworks2.UI.Tools;
 
 namespace NeuralNetworks2.UI.ViewModels
 {
@@ -11,6 +13,21 @@ namespace NeuralNetworks2.UI.ViewModels
         /// Wywoływane, gdy widok powinien zostać zamknięty.
         /// </summary>
         public event EventHandler RequestClose;
+
+        private RelayCommand closeCommand;
+
+
+        /// <summary>
+        /// Powoduje wywołanie zdarzenia <see cref="RequestClose"/>.
+        /// </summary>
+        public ICommand CloseCommand
+        {
+            get
+            {
+                return closeCommand ??
+                       (closeCommand = new RelayCommand(param => OnRequestClose()));
+            }
+        }
 
 
         /// <summary>

@@ -1,6 +1,6 @@
-﻿using System;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using NeuralNetworks2.UI.Tools;
+using NeuralNetworks2.UI.Windows;
 
 namespace NeuralNetworks2.UI.ViewModels
 {
@@ -14,7 +14,7 @@ namespace NeuralNetworks2.UI.ViewModels
 
         private readonly ListeningToVoicesViewModel listeningToVoicesViewModel;
 
-        private RelayCommand closeCommand;
+        private RelayCommand newAlgorithmCommand;
 
 
         /// <summary>
@@ -54,18 +54,14 @@ namespace NeuralNetworks2.UI.ViewModels
             }
         }
 
-
-        /// <summary>
-        /// Powoduje wywołanie zdarzenia <see cref="RequestClose"/>.
-        /// </summary>
-        public ICommand CloseCommand
+        public ICommand NewAlgorithmCommand
         {
             get
             {
-                return closeCommand ??
-                       (closeCommand = new RelayCommand(param => OnRequestClose()));
+                return newAlgorithmCommand ??
+                       (newAlgorithmCommand = new RelayCommand(param => NewAlgorithm(), param => CanNewAlgorithm()));
             }
-        }
+        }   
 
 
         /// <summary>
@@ -101,9 +97,19 @@ namespace NeuralNetworks2.UI.ViewModels
                 }
                 return false;
             }
+            ListeningToVoicesViewModel.Results = null;
 
-            //TODO
             return true;
+        }
+
+        private void NewAlgorithm()
+        {
+            InitializeAppForNewPeopleGroup(false);
+        }
+
+        private bool CanNewAlgorithm()
+        {
+            return !ListeningToVoicesViewModel.IsListening;
         }
     }
 }

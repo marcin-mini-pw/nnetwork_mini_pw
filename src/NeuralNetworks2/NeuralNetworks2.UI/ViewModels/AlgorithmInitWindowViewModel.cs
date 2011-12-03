@@ -1,9 +1,10 @@
 ﻿using System.Windows.Input;
 using NeuralNetworks2.UI.Tools;
+using NeuralNetworks2.UI.Windows;
 
 namespace NeuralNetworks2.UI.ViewModels
 {
-    public class AlgorithmInitWindowViewModel : BaseWindowViewModel
+    public sealed class AlgorithmInitWindowViewModel : BaseWindowViewModel
     {
         private static volatile AlgorithmInitWindowViewModel instance = null;
         private static readonly object instanceLock = new object();
@@ -77,13 +78,20 @@ namespace NeuralNetworks2.UI.ViewModels
 
         private void StartLearning()
         {
-            //TODO (stworzyć sieci, nauczyć je, wyświetlić rezultaty na danych testowych i zamknąć okno)
+            var algorithmsLogic = LogicProvider.Instance.AlgorithmsLogic;
+            algorithmsLogic.Reset();
+            algorithmsLogic.Init(PeopleViewModel.PeopleList, AlgorithmParamsViewModel.AlgorithmParams);
+            var testsResults = algorithmsLogic.Train();             //TODO: zrobić to asynchronicznie
 
+            TestsResultsWindowViewModel.Instance.TestsResults = testsResults;
+            var testsResultsWindow = new TestsResultsWindow();
+            testsResultsWindow.ShowDialog();
             OnRequestClose();
         }
 
         private bool CanStartLearning()
         {
+            //TODO
             return true;
         }
     }

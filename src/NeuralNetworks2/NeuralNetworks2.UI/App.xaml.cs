@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using NeuralNetworks2.UI.ViewModels;
+using NeuralNetworks2.UI.Windows;
 
 namespace NeuralNetworks2.UI
 {

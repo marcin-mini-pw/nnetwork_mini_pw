@@ -1,15 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Windows.Media.Imaging;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Windows.Data;
 
 namespace NeuralNetworks2.API.Model
 {
     [Serializable]
-    public class Person : BaseModel
+    public class Person : BaseModel, ISerializable
     {
+        private const string FirstNameSerName = "FirstName";
+        private const string SurNameSerName = "SurName";
+        private const string ImageSerName = "Image";
+        private const string TrainWavesPathsSerName = "TrainWavesPaths";
+        private const string TestWavesPathsSerName = "TestWavesPaths";
+
         private string firstName;
         private string surName;
-        private BitmapImage image;
+        private string image;
         private readonly ObservableCollection<string> trainWavesPaths = new ObservableCollection<string>();
         private readonly ObservableCollection<string> testWavesPaths = new ObservableCollection<string>();
 
@@ -31,6 +41,7 @@ namespace NeuralNetworks2.API.Model
 
                 firstName = value;
                 OnPropertyChanged<Person>(x => x.FirstName);
+                OnPropertyChanged<Person>(x => x.FullName);
             }
         }
 
@@ -52,13 +63,22 @@ namespace NeuralNetworks2.API.Model
 
                 surName = value;
                 OnPropertyChanged<Person>(x => x.SurName);
+                OnPropertyChanged<Person>(x => x.FullName);
+            }
+        }
+
+        public string FullName
+        {
+            get
+            {
+                return String.Format("{0} {1}", FirstName, SurName);
             }
         }
 
         /// <summary>
         /// Obraz.
         /// </summary>
-        public BitmapImage Image
+        public string Image
         {
             get
             {
@@ -96,6 +116,42 @@ namespace NeuralNetworks2.API.Model
             {
                 return testWavesPaths;
             }
+        }
+
+
+        public Person()
+        {
+        }
+
+        public Person(SerializationInfo info, StreamingContext context)
+        {
+            if (info == null)
+            {
+                return;
+            }
+
+            firstName = info.GetString(FirstNameSerName);
+            surName = info.GetString(SurNameSerName);
+            image = info.GetString(ImageSerName);
+            trainWavesPaths = new ObservableCollection<string>(
+                (List<string>) info.GetValue(TrainWavesPathsSerName, typeof (List<string>)));
+            testWavesPaths = new ObservableCollection<string>(
+                (List<string>)info.GetValue(TestWavesPathsSerName, typeof(List<string>)));
+        }
+
+
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if(info == null)
+            {
+                return;
+            }
+
+            info.AddValue(FirstNameSerName, firstName);
+            info.AddValue(SurNameSerName, surName);
+            info.AddValue(ImageSerName, image);
+            info.AddValue(TrainWavesPathsSerName, trainWavesPaths.ToList());
+            info.AddValue(TestWavesPathsSerName, testWavesPaths.ToList());
         }
     }
 }

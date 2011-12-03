@@ -1,6 +1,7 @@
-﻿using NeuralNetworks2.UI.ViewModels;
+﻿using System;
+using NeuralNetworks2.UI.ViewModels;
 
-namespace NeuralNetworks2.UI
+namespace NeuralNetworks2.UI.Windows
 {
     public partial class AlgorithmInitWindow
     {
@@ -22,9 +23,10 @@ namespace NeuralNetworks2.UI
         }
 
 
-        private void AlgorithmInitWindowViewModel_RequestClose(object sender, System.EventArgs e)
+        private void AlgorithmInitWindowViewModel_RequestClose(object sender, EventArgs e)
         {
             DialogResult = true;
+            AlgorithmInitWindowViewModel.RequestClose -= AlgorithmInitWindowViewModel_RequestClose;
             Close();
         }
     }

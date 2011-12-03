@@ -51,8 +51,8 @@ namespace NeuralNetworks2.Logic
                 throw new PerceptronWrapperException("Invalid arguments");
             }
 
-            if (basicNetwork.InputCount != inputData.GetLength(1)
-                || basicNetwork.OutputCount != idealData.GetLength(1)
+            if (inputData.Any(x => x.Length != basicNetwork.InputCount)
+                || idealData.Any(x => x.Length != basicNetwork.OutputCount)
                 || inputData.GetLength(0) <= 0)
             {
                 throw new PerceptronWrapperException("Invalid data set size");
@@ -73,7 +73,7 @@ namespace NeuralNetworks2.Logic
         /// <returns></returns>
         public double[][] Compute(double[][] inputData)
         {
-            if (inputData.GetLength(1) != basicNetwork.InputCount)
+            if (inputData.Any(x => x.Length != basicNetwork.InputCount))
             {
                 throw new PerceptronWrapperException("Invalid arguments");
             }
