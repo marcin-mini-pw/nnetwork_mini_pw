@@ -20,7 +20,7 @@ namespace VoiceAnalyseProto {
         public Form1() {
             InitializeComponent();
 
-            _wave = new LightWAVEFileReader(@"D:\Dokumenty\Materiały na studia\Semestr IX\Sieci neuronowe\VoiceAnalyseProto\VoiceAnalyseProto\bin\Debug\tone.wav");
+            _wave = new LightWAVEFileReader(@"D:\VOICES\tomek_1.wav");
             _filters = TriFilterBank.CreateFiltersBank(20, 1024, 44100, 0, 40000);
         }
 
@@ -71,7 +71,7 @@ namespace VoiceAnalyseProto {
 
         private void panel2_Paint(object sender, PaintEventArgs e) {
             if (_filters != null)
-                for (int index = 1; index < 20; index++ )
+                for (int index = 0; index < _filters.Length; index++ )
                     DrawSamples(panel2, e.Graphics, _filters[index], _filters[index].Length, 0.0f, 1.0f, 1);
         }
 
@@ -81,8 +81,8 @@ namespace VoiceAnalyseProto {
             if (_currentMfcc == null)
                 return;
 
-            float scale = 30.0f;
-            float delta = 3;
+            float scale = 60.0f;
+            float delta = 1;
             float dx = panel3.ClientRectangle.Width / (float)(MFCC_COUNT+1);
 
             lock (_mfccLock) {
@@ -99,15 +99,15 @@ namespace VoiceAnalyseProto {
             }
         }
 
-        private const int MFCC_COUNT = 16; 
+        private const int MFCC_COUNT = 64; 
         private double[] _currentMfcc;
         private double _currentWindow;
         private object _mfccLock = new object();
         private Thread _computeMfcc;
 
         private void ComputeMFCC() {
-            int windowSize = 1024;
-            int overlap = 512;
+            int windowSize = 64;
+            int overlap = 32;
             int windowsDelta = windowSize - overlap;
 
             double[][] filters = TriFilterBank.CreateFiltersBank(20, 1024, _wave.Frequency, 0, 4800);
@@ -117,8 +117,8 @@ namespace VoiceAnalyseProto {
                 for (int j = 0; j < windowSize; j++)
                     windowData[j] = _wave.SoundSamples[i + j];
                 // Change na MFCC i MFCC_COUNT
-                // var mfcc = MFCCCoefficients.GetFurierSpectrum(windowData, filters, MFCC_COUNT);
-                var mfcc = MFCCCoefficients.GetMFCC(windowData, filters, MFCC_COUNT);
+                var mfcc = MFCCCoefficients.GetFurierSpectrum(windowData, filters, MFCC_COUNT);
+                //var mfcc = MFCCCoefficients.GetMFCC(windowData, filters, MFCC_COUNT);
 
                 lock (_mfccLock) {
                     for (int k = 0; k < mfcc.Length; k++)
@@ -126,7 +126,7 @@ namespace VoiceAnalyseProto {
                     _currentWindow = i;
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(5);
             }
         }
 

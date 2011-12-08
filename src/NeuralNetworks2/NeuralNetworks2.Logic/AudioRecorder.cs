@@ -23,6 +23,8 @@ namespace NeuralNetworks2.Logic
         public void StartRecording()
         {
             waveInStream = new WaveIn();
+            waveInStream.WaveFormat = new WaveFormat(44100, 16, 1);
+
             writer = new WaveFileWriter(FileName, waveInStream.WaveFormat);
 
             waveInStream.DataAvailable += WaveInStream_DataAvailable;

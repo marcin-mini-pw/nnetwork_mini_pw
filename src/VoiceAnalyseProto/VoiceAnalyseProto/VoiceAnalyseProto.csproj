@@ -35,10 +35,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="alglibnet2">
-      <HintPath>..\..\alglib-3.4.0.csharp\csharp\alglibnet2.dll</HintPath>
+      <HintPath>..\..\NeuralNetworks2\NeuralNetworks2.Logic\alglibnet2.dll</HintPath>
     </Reference>
     <Reference Include="NAudio">
-      <HintPath>..\..\NAudio.dll</HintPath>
+      <HintPath>..\..\NeuralNetworks2\NeuralNetworks2.Logic\NAudio.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

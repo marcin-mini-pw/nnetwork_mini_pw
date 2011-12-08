@@ -8,10 +8,8 @@ using NeuralNetworks2.API.Exceptions;
 using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.API.Model;
 
-namespace NeuralNetworks2.Logic
-{
-    public class AlgorithmsLogic : IAlgorithmsLogic
-    {
+namespace NeuralNetworks2.Logic {
+    public class AlgorithmsLogic : IAlgorithmsLogic {
         /// <summary>
         /// Liczba wyjść pojedynczej sieci neuronowej.
         /// </summary>
@@ -31,12 +29,12 @@ namespace NeuralNetworks2.Logic
         /// <summary>
         /// Maksymalny błąd dopuszczalny dla zbioru testowego.
         /// </summary>
-        private const double TestSetMaxError = 0.3d;
+        private const double TestSetMaxError = 0.1d;
 
         /// <summary>
         /// Maksymalna liczba iteracji uczenia pojedynczej sieci.
         /// </summary>
-        private const int MaxIterationCounts = 10000;
+        private const int MaxIterationCounts = 200000;
 
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
@@ -73,10 +71,8 @@ namespace NeuralNetworks2.Logic
         /// <summary>
         /// Czy logika została zainicjowana? W praktyce oznacza to, czy zostały już utworzone sieci neuronowe.
         /// </summary>
-        private bool WasInitialized
-        {
-            get
-            {
+        private bool WasInitialized {
+            get {
                 return neuralNetworks != null;
             }
         }
@@ -97,25 +93,20 @@ namespace NeuralNetworks2.Logic
         /// </summary>
         /// <param name="peopleToBeRecognized">Osoby, których rozpoznawania będziemy uczyć sieć.</param>
         /// <param name="algParams">Parametry algorytmu.</param>
-        public void Init(IList<Person> peopleToBeRecognized, AlgorithmParams algParams)
-        {
-            if (peopleToBeRecognized == null)
-            {
+        public void Init(IList<Person> peopleToBeRecognized, AlgorithmParams algParams) {
+            if (peopleToBeRecognized == null) {
                 throw new ArgumentNullException("peopleToBeRecognized");
             }
 
-            if (!peopleToBeRecognized.Any())
-            {
+            if (!peopleToBeRecognized.Any()) {
                 throw new ArgumentOutOfRangeException("peopleToBeRecognized", "You should assign at least one person.");
             }
 
-            if (algParams == null)
-            {
+            if (algParams == null) {
                 throw new ArgumentNullException("algParams");
             }
 
-            if (WasInitialized)
-            {
+            if (WasInitialized) {
                 throw new InvalidOperationException("AlgorithmsLogic was already initialized!");
             }
 
@@ -127,10 +118,8 @@ namespace NeuralNetworks2.Logic
         /// <summary>
         /// Resetule logikę (usuwa zbudowane sieci neuronowe itp.). Potem jest potrzebna nowa inicjalizacja.
         /// </summary>
-        public void Reset()
-        {
-            if (WasAudioRecordingStarted)
-            {
+        public void Reset() {
+            if (WasAudioRecordingStarted) {
                 audioRecorder.StopRecording();
                 WasAudioRecordingStarted = false;
             }
@@ -146,71 +135,97 @@ namespace NeuralNetworks2.Logic
         /// Uczy wszystkie zbudowane sieci rozpoznawania przypisanych do nich osób.
         /// </summary>
         /// <returns>Słownik [Osoba, błąd sieci odpowiadającej tej osobie na zbiorze testowym].</returns>
-        public IDictionary<Person, double> Train()
-        {
-            if (!WasInitialized)
-            {
+        public IDictionary<Person, double> Train() {
+            if (!WasInitialized) {
                 throw new InvalidOperationException("You have to initialize logic first!");
             }
 
             var result = new Dictionary<Person, double>();
 
-            Dictionary<Person, double[][]> trainingMfccs = GetAllPeopleTrainingDataMfccs();
-            Dictionary<Person, double[][]> testMfccs = GetAllPeopleTestDataMfccs();
+            Dictionary<Person, List<double[]>[]> trainingMfccs = GetAllPeopleTrainingDataMfccs();
+            Dictionary<Person, List<double[]>[]> testMfccs = GetAllPeopleTestDataMfccs();
 
-            foreach (Person person in people)
-            {
+            double[] input = new double[GetNetworksInputSize()];
+            double[][] answer = new double[][] { new double[1] };
+
+            foreach (Person person in people) {
+                Debug.WriteLine("Train person: {0}", person.FirstName);
+
                 PerceptronWrapper network = neuralNetworks[person];
-                int iterations = 0;
-                double error = 1.0d;
-                while (error > TestSetMaxError && iterations < MaxIterationCounts)
-                {
-                    double r = Random.NextDouble(); //losowa liczba z zakresu [0.0; 1.0]
-                    double expectedAnswer = 1.0d;
-                    double[][] personMfccs = trainingMfccs[person];
-                    if (r >= algorithmParams.TCoef)
-                    {
-                        expectedAnswer = 0.0d;
-                        int otherPersonInd = Random.Next(neuralNetworks.Count);
-                        Person otherPerson = people[otherPersonInd];
-                        if (otherPerson == person)
-                        {
-                            otherPerson = people[(otherPersonInd + 1) % neuralNetworks.Count];
-                        }
-                        personMfccs = trainingMfccs[otherPerson];
-                    }
+                TrainPesonNetwork(trainingMfccs, input, answer, person, network);
 
-                    var expectedAnswers = new double[personMfccs.Length][];
-                    for (int i = 0; i < expectedAnswers.Length; ++i)
-                    {
-                        expectedAnswers[i] = new [] {expectedAnswer};
-                    }
-                    network.Train(algorithmParams.LearningRate, 1, algorithmParams.Momentum, personMfccs,
-                                  expectedAnswers);
-
-                    error = Test(person, testMfccs);
-                    iterations++;
-                }
-
-                result.Add(person, error);
+                // Przetestuj nauczona siec
+                result.Add(person, Test(person, testMfccs, input));
             }
 
             WasTrained = true;
             return result;
         }
 
+        private void TrainPesonNetwork(
+            Dictionary<Person, List<double[]>[]> trainingMfccs, 
+            double[] input, double[][] answer, Person person, 
+            PerceptronWrapper network) {
+
+            // dla kazdego pliku uczacego lista mfcc dla kolejnych ramek glosu
+            List<double[]>[] personMfccs = trainingMfccs[person];
+
+            int iterations  = 0;
+
+            while (iterations < MaxIterationCounts) {
+                double expectedAnswer = 1.0d;
+
+                if (Random.NextDouble() < algorithmParams.TCoef) {
+                    expectedAnswer = 0.0d;
+                    Person otherPerson = SelectOtherPerson(person);
+                    personMfccs = trainingMfccs[otherPerson];
+                }
+
+                // Losujemy ramki na ktorych bedziemy uczyc siec, ramki musza wystepowac po sobie
+                // bez przerws
+                DrawInputData(input, personMfccs);
+
+                answer[0][0] = expectedAnswer;
+                network.Train(algorithmParams.LearningRate, 1, algorithmParams.Momentum,
+                    new[] { input },
+                    answer);
+
+                iterations++;
+            }
+        }
+
+        private void DrawInputData(double[] input, List<double[]>[] personMfccs) {
+            // Wylosuj numer pliku z ktorego pobierzemy dane
+            int file = Random.Next(personMfccs.Length);
+            // Wylosuj poczatek ciagu ramek
+            int start = Random.Next(personMfccs[file].Count - algorithmParams.SignalFramesCount);
+            // Kopiuj sygnal do tablicy input
+            for (int k = 0; k < algorithmParams.SignalFramesCount; k++) {
+                double[] frameMfcc = personMfccs[file][start + k];
+                for (int l = 0; l < algorithmParams.MfccCount; l++) {
+                    input[l + k * algorithmParams.MfccCount] = frameMfcc[l];
+                }
+            }
+        }
+
+        private Person SelectOtherPerson(Person person) {
+            int otherPersonInd = Random.Next(neuralNetworks.Count);
+            Person otherPerson = people[otherPersonInd];
+            if (otherPerson == person) {
+                otherPerson = people[(otherPersonInd + 1) % neuralNetworks.Count];
+            }
+            return otherPerson;
+        }
+
         /// <summary>
         /// Rozpoczyna nagrywanie dźwięku z mikrofonu.
         /// </summary>
-        public void StartRecordingVoice()
-        {
-            if (!WasInitialized)
-            {
+        public void StartRecordingVoice() {
+            if (!WasInitialized) {
                 throw new InvalidOperationException("You have to initialize logic first!");
             }
 
-            if (!WasTrained)
-            {
+            if (!WasTrained) {
                 throw new InvalidOperationException("You have to train neural networks first!");
             }
 
@@ -223,22 +238,29 @@ namespace NeuralNetworks2.Logic
         /// </summary>
         /// <returns>Rezultaty zwrócone przez sieci odpowiadające poszczególnym osobom.
         /// Posortowane od najlepszych do najsłabszych wyników.</returns>
-        public IList<Tuple<Person, double>> StopRecordingAndGetResults()
-        {
-            if (!WasAudioRecordingStarted)
-            {
+        public IList<Tuple<Person, double>> StopRecordingAndGetResults() {
+            if (!WasAudioRecordingStarted) {
                 throw new InvalidOperationException("You have to start recording first!");
             }
 
             var stream = audioRecorder.StopRecording();
-            double[] mfccs = GetMfccsFromStream(stream);
+            List<double[]> mfccs = GetMfccsFromStream(stream);
             var results = new List<Tuple<Person, double>>();
 
-            foreach (Person person in people)
-            {
+            const int DRAW_NUMBER = 10;
+            double[] input = new double[GetNetworksInputSize()];
+
+            foreach (Person person in people) {
                 PerceptronWrapper network = neuralNetworks[person];
-                double networkRes = network.Compute(new[] { mfccs })[0][0];
-                results.Add(new Tuple<Person, double>(person, networkRes));
+
+                double networkResults = 0.0f;
+                foreach (int i in Enumerable.Range(0, DRAW_NUMBER)) {
+                    DrawInputData(input, new[] { mfccs });
+                    networkResults += network.Compute(new[] { input })[0][0];
+                }
+                // Obliczamy srednio z DRAW_NUMBER prob rozpoznania glosu
+                networkResults /= DRAW_NUMBER;
+                results.Add(new Tuple<Person, double>(person, networkResults));
             }
 
             results.Sort((x, y) => y.Item2.CompareTo(x.Item2));
@@ -247,58 +269,48 @@ namespace NeuralNetworks2.Logic
         }
 
 
-        private void CreateNeuralNetworks()
-        {
+        private void CreateNeuralNetworks() {
             neuralNetworks = new Dictionary<Person, PerceptronWrapper>();
 
             int inputSize = GetNetworksInputSize();
             ICollection<int> hiddenLayers = GetLayersCount(inputSize);
-            foreach (var person in people)
-            {
+            foreach (var person in people) {
                 var perceptron = new PerceptronWrapper(inputSize, hiddenLayers, NeuralNetworkOutputSize, UseBias,
                                                        UseUniPolarActivationFunction);
                 neuralNetworks.Add(person, perceptron);
             }
         }
 
-        private int GetNetworksInputSize()
-        {
+        private int GetNetworksInputSize() {
             return algorithmParams.MfccCount * algorithmParams.SignalFramesCount;
         }
 
-        private int[] GetLayersCount(int inputSize)
-        {
+        private int[] GetLayersCount(int inputSize) {
             var inputSizeD = (double)inputSize;
             var layers = new int[HiddenLayerNeuronsCountCoefs.Length];
 
-            for (int i = 0; i < layers.Length; ++i)
-            {
+            for (int i = 0; i < layers.Length; ++i) {
                 layers[i] = Convert.ToInt32(inputSizeD / HiddenLayerNeuronsCountCoefs[i]);
             }
 
             return layers;
         }
 
-        private Dictionary<Person, double[][]> GetAllPeopleTrainingDataMfccs()
-        {
+        private Dictionary<Person, List<double[]>[]> GetAllPeopleTrainingDataMfccs() {
             return GetAllPeopleMfccsHelper(p => p.TrainWavesPaths);
         }
 
-        private Dictionary<Person, double[][]> GetAllPeopleTestDataMfccs()
-        {
+        private Dictionary<Person, List<double[]>[]> GetAllPeopleTestDataMfccs() {
             return GetAllPeopleMfccsHelper(p => p.TestWavesPaths);
         }
 
-        private Dictionary<Person, double[][]> GetAllPeopleMfccsHelper(
-            Func<Person, ObservableCollection<string>> getWavesPaths)
-        {
-            var mfccs = new Dictionary<Person, double[][]>();
-            foreach (Person person in people)
-            {
+        private Dictionary<Person, List<double[]>[]> GetAllPeopleMfccsHelper(
+            Func<Person, ObservableCollection<string>> getWavesPaths) {
+            var mfccs = new Dictionary<Person, List<double[]>[]>();
+            foreach (Person person in people) {
                 ObservableCollection<string> wavesPaths = getWavesPaths(person);
-                var personMfccs = new double[wavesPaths.Count][];
-                for (int i = 0; i < wavesPaths.Count; ++i)
-                {
+                var personMfccs = new List<double[]>[wavesPaths.Count];
+                for (int i = 0; i < wavesPaths.Count; ++i) {
                     personMfccs[i] = GetMfccsFromFile(wavesPaths[i]);
                 }
 
@@ -308,72 +320,80 @@ namespace NeuralNetworks2.Logic
             return mfccs;
         }
 
-        private double[] GetMfccsFromFile(string path)
-        {
+        private List<double[]> GetMfccsFromFile(string path) {
             LightWaveFileReader wave = null;
-            try
-            {
+            try {
                 wave = new LightWaveFileReader(path);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 throw new WaveFileException(path, ex.Message, ex);
             }
 
             return GetMfccsHelper(wave);
         }
 
-        private double[] GetMfccsFromStream(Stream stream)
-        {
+        private List<double[]> GetMfccsFromStream(Stream stream) {
             var wave = new LightWaveFileReader(stream);
             return GetMfccsHelper(wave);
         }
 
-        private double[] GetMfccsHelper(LightWaveFileReader wave)
-        {
-            const int windowSize = 1024;
-            const int overlap = 512;
-            const int windowsDelta = windowSize - overlap;
+        #region MFCC Stuff
 
-            var result = new double[GetNetworksInputSize()];
 
-            double[][] filters = TriFilterBank.CreateFiltersBank(20, 1024, wave.Frequency, 0, 4800);
-            //TODO: te stałe wyrzucić gdzieś wyżej
+        private const int FREQUENCY = 44100;
+        const int WINDOW_SIZE = 1024;
+        const int OVERLAP = 512;
+        const int FILTERS_NUMBER = 40;
+        private static double[][] filters =
+            TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 8000);
 
-            var windowData = new double[windowSize];
+        const double SPEAK_POWER_THRESHOLD = 8.5; // Ustalone empirycznie
 
-            int s = 0;
-            for (int i = 0; i < wave.SamplesCount - windowSize; i += windowsDelta)
-            {
-                if (s + 1 >= algorithmParams.SignalFramesCount)
-                {
-                    break;
-                }
+        /// <summary>
+        /// Zwaraca lite wsp. mfcc dla kolejnych ramek sgnalu mowy
+        /// </summary>
+        /// <param name="wave"></param>
+        /// <returns></returns>
+        private List<double[]> GetMfccsHelper(LightWaveFileReader wave) {
+            if (wave.Frequency != FREQUENCY)
+                throw new ArgumentException("Only 44100Hz waves are supported");
 
-                for (int j = 0; j < windowSize; j++)
-                {
+            const int WIN_DELTA = WINDOW_SIZE - OVERLAP;
+
+            var results = new List<double[]>();
+            var windowData = new double[WINDOW_SIZE];
+            double[] tmp = new double[algorithmParams.MfccCount];
+
+            double aproxSpeakThreshold = SPEAK_POWER_THRESHOLD * wave.SoundSamples.Average(x => Math.Abs(x));
+
+            for (int i = 0; i < wave.SamplesCount - WINDOW_SIZE; i += WIN_DELTA) {
+                for (int j = 0; j < WINDOW_SIZE; j++) {
                     windowData[j] = wave.SoundSamples[i + j];
                 }
 
-                var mfcc = MFCCCoefficients.GetMFCC(windowData, filters, algorithmParams.MfccCount);
-                for (int j = s * algorithmParams.MfccCount, k = 0; j < s * (algorithmParams.MfccCount + 1); ++j, ++k)
-                {
-                    result[j] = mfcc[k];
-                }
-                ++s;
-            }
+                double signalPower;
+                var mfcc = MFCCCoefficients.GetMFCC(FREQUENCY, windowData, filters, algorithmParams.MfccCount, out signalPower);
+                //Debug.WriteLine("power: {0}", signalPower);
 
-            if (s <= algorithmParams.SignalFramesCount)
-            {
-                for (int i = s * algorithmParams.MfccCount; i < result.Length; ++i)
-                {
-                    result[i] = 0.0; //TODO: czy może powinniśmy dopełniać tutaj czymś innym niż zerami?
-                    //może rzucić po prostu jakimś wyjątkiem jak sygnał był za krótki?
+                if (signalPower > aproxSpeakThreshold) {
+                    for (int k = 0; k < algorithmParams.MfccCount; ++k) {
+                        tmp[k] = mfcc[k];
+                    }
+
+                    results.Add(tmp);
+                    tmp = new double[algorithmParams.MfccCount];
                 }
             }
 
-            return result;
+            if (results.Count < algorithmParams.SignalFramesCount) {
+                throw new ArgumentException("Too little usable voice samples found in wave file");
+            }
+
+            Debug.WriteLine("Z pliku wyodrebiono {0} ramek", results.Count);
+            return results;
         }
+
+        #endregion
 
         /// <summary>
         /// Wykonuje testy dla danej osoby na zbiorach testowych.
@@ -381,31 +401,25 @@ namespace NeuralNetworks2.Logic
         /// <param name="person">Osoba, której sieć chcemy przetestować.</param>
         /// <param name="testSetMfccs">Współczynniki MFCC dla wszystkich próbek testowych dla wszystkich osób.</param>
         /// <returns>Błąd sieci odpowiadającej zadanej osobie na zbiorze testowym.</returns>
-        private double Test(Person person, Dictionary<Person, double[][]> testSetMfccs)
-        {
+        private double Test(Person testedPerson, Dictionary<Person, List<double[]>[]> testSet, double[] input) {
             Debug.Assert(NeuralNetworkOutputSize == 1);
 
-            PerceptronWrapper network = neuralNetworks[person];
+            const int TEST_COUNT = 50; // Ile razy losujemy probki do testow
+            PerceptronWrapper network = neuralNetworks[testedPerson];
             double error = 0.0d;
-            int testsCount = 0;
-            foreach (Person p in people)
-            {
-                var mfccs = testSetMfccs[p];
-                var result = network.Compute(mfccs)[0];
 
-                if (p == person)
-                {
-                    for (int i = 0; i < result.Length; ++i)
-                    {
-                        result[i] = 1.0d - result[i];
-                    }
+            foreach (Person person in people) {
+                double answer = (person == testedPerson) ? 1.0 : 0.0;
+
+                foreach (int tmp in Enumerable.Range(0, TEST_COUNT)) {
+                    DrawInputData(input, testSet[person]);
+                    double networkAnswer = network.Compute(new[] { input })[0][0];
+
+                    error += Math.Abs(answer - networkAnswer);
                 }
-
-                error += result.Sum();
-                testsCount += result.Length;
             }
 
-            return error / testsCount; //TODO: przemyśleć, czy zwracanie tutaj średniej arytmetycznej jest dobrym pomysłem
+            return error / (TEST_COUNT * people.Count);
         }
     }
 }

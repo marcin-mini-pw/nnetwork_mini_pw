@@ -88,6 +88,8 @@ namespace NeuralNetworks2.Logic
             double[] bi = new double[filtersNumber + 2];
             for (int i = 0; i < bi.Length; i++)
             {
+                // bi[i] - srodek i tego filtra, bi[i] zawiera INDEKS wyjscia transformaty fft
+                // ktory odpowiada czestot. szczytu  filtra
                 bi[i] = GetBI(i, N, filtersNumber, sampleFrequency, lowFrequency, hightFrequency);
             }
 

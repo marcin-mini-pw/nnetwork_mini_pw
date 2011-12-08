@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
 using NAudio.Wave;
+using System.Diagnostics;
+using System;
 
 
 namespace NeuralNetworks2.Logic
@@ -60,19 +62,19 @@ namespace NeuralNetworks2.Logic
             float min = SoundSamples.Min();
             float max = SoundSamples.Max();
 
-            float dist2 = (max - min) / 2.0f;
+            // Nowe wzmocnienie dziala tak ze
+            // 0 => 0, pomocne przy ustalaniu mocy sygnau
+            float emph = 1.0f;
+            if (Math.Abs(min) > EPSILON)
+                emph = Math.Max(emph, 1.0f / Math.Abs(min));
 
-            if (dist2 > EPSILON)
+            if (Math.Abs(max) > EPSILON)
+                emph = Math.Min(emph, 1.0f / Math.Abs(max));
+
+            if (emph > 1.0f)
             {
                 SoundSamples = SoundSamples
-                    .Select(x => ((x - min) / dist2) - 1.0f)
-                    .ToArray();
-            }
-            else
-            {
-                float avg = (max + min) / 2.0f;
-                SoundSamples = SoundSamples
-                    .Select(x => (x - avg))
+                    .Select(x => x * emph)
                     .ToArray();
             }
         }
@@ -80,6 +82,7 @@ namespace NeuralNetworks2.Logic
 
         private void ReadWaveFile(string path)
         {
+            Debug.WriteLine("Load file: {0}", path);
             using (var waveReader = new WaveFileReader(path))
             {
                 ReadWaveFileHelper(waveReader);
@@ -92,6 +95,8 @@ namespace NeuralNetworks2.Logic
             {
                 ReadWaveFileHelper(waveReader);
             }
+
+            stream.Dispose(); // tak na wszelki wypadek
         }
 
         private void ReadWaveFileHelper(WaveFileReader waveReader)
@@ -106,6 +111,7 @@ namespace NeuralNetworks2.Logic
                 throw new LightWaveFileReaderException("Sorry, we support only MONO wave files!");
 
             waveReader.Read(new float[][] { SoundSamples }, SamplesCount);
+            NormalizeWaveSamples();
         }
     }
 }

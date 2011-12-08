@@ -11,21 +11,39 @@ namespace NeuralNetworks2.Logic
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static double[] GetMFCC(double[] data, double[][] filtersBank, int coffCount)
+        public static double[] GetMFCC(double sampleFrequency, double[] data, double[][] filtersBank, int coffCount, out double signalPower)
         {
             // 1. Hamming Window
-            ApplyHammingWindow(data);
+            ApplyHammingWindow(data); 
 
             // 2. FFT
             Complex[] fft = GetFFT(data);
+            
+            // Uzyteczna jest tylko 1 polowa tablicy abs(fft)
+            // reszta jest odbiciem symetrycznym (z wlasnosci fft)
+            // Element realFft[i] - reprezentuje czestotliwosc i Hz, 
+            // realFft[0] - reprezentuje moc sygnalu
+            // Ale TYLKO dla probki (data) rozmiaru czestotliwosci probkowania
+            // dla probki  rozmiaru k realFft[i] reprezentuje czestotliwosc
+            // i * sampleFrequency / k
+            double[] realFft = ExtractSignalPower(fft);
+            signalPower = realFft[0];
 
             // 3. Filtracja trojkatami z banku filtrow
-            double[] logEnergy = FilterData(fft, filtersBank);
+            double[] logEnergy = FilterData(sampleFrequency, realFft, filtersBank);
 
             // 4. DCT
             double[] mfcc = GetDCT(logEnergy, coffCount);
 
             return mfcc;
+        }
+
+        private static double[] ExtractSignalPower(Complex[] fft) {
+            double[] realFft = new double[fft.Length / 2];
+            // Tylko 1 polowa jest znaczaca
+            for (int i = 0; i < realFft.Length / 2; i++)
+                realFft[i] = alglib.math.abscomplex(fft[i]);
+            return realFft;
         }
 
         /// <summary>
@@ -78,7 +96,7 @@ namespace NeuralNetworks2.Logic
                 double sum = 0.0f;
                 for (int i = 0; i < logEnergy.Length; i++)
                 {
-                    sum += logEnergy[i] * Math.Cos(j * (i - 0.5) * Math.PI / mfccCoffsNumber);
+                    sum += logEnergy[i] * Math.Cos(j * (i + 0.5) * Math.PI / logEnergy.Length);
                 }
                 dct[j] = sum;
             }
@@ -89,19 +107,23 @@ namespace NeuralNetworks2.Logic
         /// <summary>
         /// Filtruje sygnal z fft za pomoca zestawu filtrow z filtersBank
         /// </summary>
-        /// <param name="fft"></param>
+        /// <param name="realfft"></param>
         /// <param name="filtersBank"></param>
         /// <returns></returns>
-        private static double[] FilterData(Complex[] fft, double[][] filtersBank)
+        private static double[] FilterData(double sampleFrequency, double[] realfft, double[][] filtersBank)
         {
+            // dla probki  rozmiaru k realFft[j] reprezentuje czestotliwosc
+            // j * sampleFrequency / k
+
+            double k = realfft.Length;
             double[] X = new double[filtersBank.Length];
 
             for (int i = 0; i < X.Length; i++)
             {
                 double sum = 0.0;
-                for (int j = 0; j < fft.Length; j++)
+                for (int j = 0; j < realfft.Length; j++)
                 {
-                    sum += alglib.math.abscomplex(fft[j]) * filtersBank[i][j];
+                    sum += realfft[j] * filtersBank[i][j];
                 }
                 X[i] = Math.Log10(sum);
             }
