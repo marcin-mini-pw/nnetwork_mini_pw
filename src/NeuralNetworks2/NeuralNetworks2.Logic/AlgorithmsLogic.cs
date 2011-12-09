@@ -34,7 +34,7 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Maksymalna liczba iteracji uczenia pojedynczej sieci.
         /// </summary>
-        private const int MaxIterationCounts = 200000;
+        private const int MaxIterationCounts = 160000;
 
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
@@ -343,11 +343,11 @@ namespace NeuralNetworks2.Logic {
         private const int FREQUENCY = 44100;
         const int WINDOW_SIZE = 1024;
         const int OVERLAP = 512;
-        const int FILTERS_NUMBER = 40;
+        const int FILTERS_NUMBER = 20;
         private static double[][] filters =
-            TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 8000);
+            TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 4600);
 
-        const double SPEAK_POWER_THRESHOLD = 8.5; // Ustalone empirycznie
+        const double SPEAK_POWER_THRESHOLD = 0.022; // Ustalone empirycznie
 
         /// <summary>
         /// Zwaraca lite wsp. mfcc dla kolejnych ramek sgnalu mowy
@@ -364,26 +364,46 @@ namespace NeuralNetworks2.Logic {
             var windowData = new double[WINDOW_SIZE];
             double[] tmp = new double[algorithmParams.MfccCount];
 
-            double aproxSpeakThreshold = SPEAK_POWER_THRESHOLD * wave.SoundSamples.Average(x => Math.Abs(x));
+            double aproxSpeakThreshold = SPEAK_POWER_THRESHOLD;
+
+            //FileStream fs = new FileStream("d:/tmp/tracks.txt", FileMode.Append);
+            //StreamWriter sw = new StreamWriter(fs);
 
             for (int i = 0; i < wave.SamplesCount - WINDOW_SIZE; i += WIN_DELTA) {
+                double power = 0.0f;
                 for (int j = 0; j < WINDOW_SIZE; j++) {
                     windowData[j] = wave.SoundSamples[i + j];
+                    power += Math.Abs(windowData[j]);
                 }
+                power /= WINDOW_SIZE;
 
                 double signalPower;
                 var mfcc = MFCCCoefficients.GetMFCC(FREQUENCY, windowData, filters, algorithmParams.MfccCount, out signalPower);
-                //Debug.WriteLine("power: {0}", signalPower);
+                //Debug.WriteLine("power: {0}", power);
 
-                if (signalPower > aproxSpeakThreshold) {
+                if (power > aproxSpeakThreshold) {
+                    //sw.Write('X');
+                    double sum = 0.0f;
                     for (int k = 0; k < algorithmParams.MfccCount; ++k) {
                         tmp[k] = mfcc[k];
+                        sum += tmp[k] * tmp[k];
+                    }
+                    // Normalize data
+                    if (sum > 0.0001) {
+                        sum = Math.Sqrt(sum);
+                        for (int k = 0; k < algorithmParams.MfccCount; ++k) {
+                            tmp[k] /= sum;
+                        }
                     }
 
                     results.Add(tmp);
                     tmp = new double[algorithmParams.MfccCount];
                 }
+                //else sw.Write('_');
             }
+
+            //sw.WriteLine();
+            //sw.Close();
 
             if (results.Count < algorithmParams.SignalFramesCount) {
                 throw new ArgumentException("Too little usable voice samples found in wave file");
