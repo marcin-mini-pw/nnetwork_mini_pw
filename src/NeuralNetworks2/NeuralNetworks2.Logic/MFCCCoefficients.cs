@@ -96,7 +96,7 @@ namespace NeuralNetworks2.Logic
                 double sum = 0.0f;
                 for (int i = 0; i < logEnergy.Length; i++)
                 {
-                    sum += logEnergy[i] * Math.Cos(j * (i + 0.5) * Math.PI / logEnergy.Length);
+                    sum += logEnergy[i] * Math.Cos((j + 1.0) * (i + 0.5) * Math.PI / logEnergy.Length);
                 }
                 dct[j] = sum;
             }

@@ -34,7 +34,7 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Maksymalna liczba iteracji uczenia pojedynczej sieci.
         /// </summary>
-        private const int MaxIterationCounts = 160000;
+        private const int MaxIterationCounts = 400000;
 
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
@@ -174,11 +174,14 @@ namespace NeuralNetworks2.Logic {
 
             while (iterations < MaxIterationCounts) {
                 double expectedAnswer = 1.0d;
-
+                
                 if (Random.NextDouble() < algorithmParams.TCoef) {
                     expectedAnswer = 0.0d;
                     Person otherPerson = SelectOtherPerson(person);
                     personMfccs = trainingMfccs[otherPerson];
+                }
+                else {
+                    personMfccs = trainingMfccs[person];
                 }
 
                 // Losujemy ramki na ktorych bedziemy uczyc siec, ramki musza wystepowac po sobie
@@ -247,7 +250,7 @@ namespace NeuralNetworks2.Logic {
             List<double[]> mfccs = GetMfccsFromStream(stream);
             var results = new List<Tuple<Person, double>>();
 
-            const int DRAW_NUMBER = 10;
+            const int DRAW_NUMBER = 5;
             double[] input = new double[GetNetworksInputSize()];
 
             foreach (Person person in people) {
@@ -343,9 +346,9 @@ namespace NeuralNetworks2.Logic {
         private const int FREQUENCY = 44100;
         const int WINDOW_SIZE = 1024;
         const int OVERLAP = 512;
-        const int FILTERS_NUMBER = 20;
+        const int FILTERS_NUMBER = 27;
         private static double[][] filters =
-            TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 4600);
+            TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 8000);
 
         const double SPEAK_POWER_THRESHOLD = 0.022; // Ustalone empirycznie
 
@@ -377,11 +380,11 @@ namespace NeuralNetworks2.Logic {
                 }
                 power /= WINDOW_SIZE;
 
-                double signalPower;
-                var mfcc = MFCCCoefficients.GetMFCC(FREQUENCY, windowData, filters, algorithmParams.MfccCount, out signalPower);
-                //Debug.WriteLine("power: {0}", power);
-
                 if (power > aproxSpeakThreshold) {
+                    //Debug.WriteLine("power: {0}", power);
+                    double signalPower;
+                    var mfcc = MFCCCoefficients.GetMFCC(FREQUENCY, windowData, filters, algorithmParams.MfccCount, out signalPower);
+                
                     //sw.Write('X');
                     double sum = 0.0f;
                     for (int k = 0; k < algorithmParams.MfccCount; ++k) {
@@ -389,12 +392,12 @@ namespace NeuralNetworks2.Logic {
                         sum += tmp[k] * tmp[k];
                     }
                     // Normalize data
-                    if (sum > 0.0001) {
-                        sum = Math.Sqrt(sum);
-                        for (int k = 0; k < algorithmParams.MfccCount; ++k) {
-                            tmp[k] /= sum;
-                        }
-                    }
+                    //if (sum > 0.0001) {
+                    //    sum = Math.Sqrt(sum);
+                    //    for (int k = 0; k < algorithmParams.MfccCount; ++k) {
+                    //        tmp[k] /= sum;
+                    //    }
+                    //}
 
                     results.Add(tmp);
                     tmp = new double[algorithmParams.MfccCount];
