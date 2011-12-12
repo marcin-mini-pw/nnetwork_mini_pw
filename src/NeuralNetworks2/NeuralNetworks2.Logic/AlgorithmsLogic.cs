@@ -250,7 +250,7 @@ namespace NeuralNetworks2.Logic {
             List<double[]> mfccs = GetMfccsFromStream(stream);
             var results = new List<Tuple<Person, double>>();
 
-            const int DRAW_NUMBER = 5;
+            const int DRAW_NUMBER = 10;
             double[] input = new double[GetNetworksInputSize()];
 
             foreach (Person person in people) {
