@@ -55,6 +55,7 @@ namespace NeuralNetworks2.Logic {
 
         public void AddAlgorithmParamsToTitle(AlgorithmParams algParams) {
             string paramsString = String.Format(
+                CultureInfo.InvariantCulture,
                 " [e: {0:F3}, m: {1:F3}, mfcc: {2}, sigfr: {3}, tc: {4:F3}]",
                 algParams.LearningRate,
                 algParams.Momentum,

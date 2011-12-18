@@ -30,17 +30,17 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Maksymalny błąd dopuszczalny dla zbioru testowego.
         /// </summary>
-        private const double TestSetMaxError = 0.1d;
+        private const double TestSetMaxError = 0.08d;
 
         /// <summary>
         /// Maksymalna liczba iteracji uczenia pojedynczej sieci.
         /// </summary>
-        private const int MaxIterationCounts = 160000;
+        private const int MaxIterationCounts = 150000;
 
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
         /// </summary> // 8 16 domyslny
-        private static readonly double[] HiddenLayerNeuronsCountCoefs = new double[] { 8d, 16d };
+        private static readonly double[] HiddenLayerNeuronsCountCoefs = new double[] { 6d, 16d };
 
         /// <summary>
         /// Służy do nagrywania głosów z mikrofonu.
@@ -194,7 +194,7 @@ namespace NeuralNetworks2.Logic {
                 // bez przerws
                 DrawInputData(input, personMfccs);
 
-                double scale = Math.Sqrt(10.0 + iterations);
+                double scale = Math.Sqrt(1.0 + iterations);
                 double newLearningRate = algorithmParams.LearningRate / scale;
                 double newMomentum = algorithmParams.Momentum / scale;
 
@@ -211,6 +211,10 @@ namespace NeuralNetworks2.Logic {
 
                     string line = String.Format(CultureInfo.InvariantCulture, "{0}\t{1}", iterations, testResult);
                     Debug.WriteLine(line);
+
+                    if (testResult <= TestSetMaxError) {
+                        break;
+                    }
                 }
             }
 
@@ -332,7 +336,7 @@ namespace NeuralNetworks2.Logic {
             return results;
         }
 
-        const double THRESEHOLD = 0.65;
+        const double THRESEHOLD = 0.75;
         private List<Tuple<Person, double>> GetResults_AllTheresholdStrategy(List<double[]> mfccs) {
             
             var results = new List<Tuple<Person, double>>();
@@ -498,7 +502,7 @@ namespace NeuralNetworks2.Logic {
         private static double[][] filters =
             TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 8000);
 
-        const double SPEAK_POWER_THRESHOLD = 0.022; // Ustalone empirycznie
+        const double SPEAK_POWER_THRESHOLD = 0.022; // Ustalone empirycznie 0.022
 
         /// <summary>
         /// Zwaraca lite wsp. mfcc dla kolejnych ramek sgnalu mowy
