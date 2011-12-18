@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Diagnostics;
-using System.IO;
 using System.Globalization;
+using System.IO;
 using NeuralNetworks2.API.Model;
 
 namespace NeuralNetworks2.Logic {
@@ -12,7 +9,7 @@ namespace NeuralNetworks2.Logic {
     /// Obsluga gnuplota
     /// </summary>
     class GnuPlot {
-        private const string GNU_PLOT_PATH = @"D:\TOOLS\gnuplot\binary\gnuplot.exe";
+        private const string GNU_PLOT_PATH = @"E:\Projekty\nnetwork_mini_pw\src\NeuralNetworks2\gnuplot\binary\gnuplot.exe";
 
         private string _plotTitle;
         private string _plotPath;

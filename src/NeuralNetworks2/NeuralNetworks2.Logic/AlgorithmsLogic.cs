@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using NeuralNetworks2.API.Exceptions;
 using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.API.Model;
-using System.Globalization;
 
 namespace NeuralNetworks2.Logic {
     public class AlgorithmsLogic : IAlgorithmsLogic {
@@ -30,12 +30,12 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Maksymalny błąd dopuszczalny dla zbioru testowego.
         /// </summary>
-        private const double TestSetMaxError = 0.08d;
+        private const double TestSetMaxError = 0.04d;
 
         /// <summary>
         /// Maksymalna liczba iteracji uczenia pojedynczej sieci.
         /// </summary>
-        private const int MaxIterationCounts = 150000;
+        private const int MaxIterationCounts = 160000;//400000;
 
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
@@ -169,8 +169,8 @@ namespace NeuralNetworks2.Logic {
             PerceptronWrapper network) {
 
             GnuPlot plot = new GnuPlot(
-                person.FullName, 
-                @"d:\tmp\plot_" + person.FullName.Replace(' ', '_') + ".png"
+                person.FullName,
+                @"D:\GIT\nnetwork_mini_pw\charts\d_chart_" + person.FullName.Replace(' ', '_') + ".png"
                 );
             plot.BeginPlot();
 
@@ -308,8 +308,8 @@ namespace NeuralNetworks2.Logic {
 
             var stream = audioRecorder.StopRecording();
             List<double[]> mfccs = GetMfccsFromStream(stream);
-            var results = GetResults(mfccs);// GetResults_AllTheresholdStrategy(mfccs);
-            //var results = GetResults_AllMaxStrategy(mfccs);
+            //var results = GetResults(mfccs);// GetResults_AllTheresholdStrategy(mfccs);
+            var results = GetResults_AllMaxStrategy(mfccs);
 
             results.Sort((x, y) => y.Item2.CompareTo(x.Item2));
             WasAudioRecordingStarted = false;
