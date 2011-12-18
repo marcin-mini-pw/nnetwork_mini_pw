@@ -40,7 +40,7 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
         /// </summary> // 8 16 domyslny
-        private static readonly double[] HiddenLayerNeuronsCountCoefs = new double[] { 8d, 16d };
+        private static readonly double[] HiddenLayerNeuronsCountCoefs = new double[] { 4d, 8d };
 
         /// <summary>
         /// Służy do nagrywania głosów z mikrofonu.
@@ -302,7 +302,7 @@ namespace NeuralNetworks2.Logic {
 
             var stream = audioRecorder.StopRecording();
             List<double[]> mfccs = GetMfccsFromStream(stream);
-            var results = GetResults_AllTheresholdStrategy(mfccs);
+            var results = GetResults(mfccs);// GetResults_AllTheresholdStrategy(mfccs);
 
             results.Sort((x, y) => y.Item2.CompareTo(x.Item2));
             WasAudioRecordingStarted = false;
@@ -447,6 +447,8 @@ namespace NeuralNetworks2.Logic {
                     personMfccs[i] = GetMfccsFromFile(wavesPaths[i]);
                 }
 
+                
+
                 mfccs.Add(person, personMfccs);
             }
 
@@ -480,7 +482,7 @@ namespace NeuralNetworks2.Logic {
         private static double[][] filters =
             TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 8000);
 
-        const double SPEAK_POWER_THRESHOLD = 0.022; // Ustalone empirycznie
+        const double SPEAK_POWER_THRESHOLD = 0.05;//0.022; // Ustalone empirycznie
 
         /// <summary>
         /// Zwaraca lite wsp. mfcc dla kolejnych ramek sgnalu mowy
@@ -502,6 +504,8 @@ namespace NeuralNetworks2.Logic {
             //FileStream fs = new FileStream("d:/tmp/tracks.txt", FileMode.Append);
             //StreamWriter sw = new StreamWriter(fs);
 
+            //wave.NormalizeWaveSamples();
+           
             for (int i = 0; i < wave.SamplesCount - WINDOW_SIZE; i += WIN_DELTA) {
                 double power = 0.0f;
                 for (int j = 0; j < WINDOW_SIZE; j++) {

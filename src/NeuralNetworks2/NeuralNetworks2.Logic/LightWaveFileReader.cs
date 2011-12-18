@@ -58,6 +58,9 @@ namespace NeuralNetworks2.Logic
         public void NormalizeWaveSamples()
         {
             const float EPSILON = 0.0001f;
+            const float NOISE_LEVEL_COEF = 0.03f;
+
+            SamplesCount = SoundSamples.Length;
 
             float min = SoundSamples.Min();
             float max = SoundSamples.Max();
@@ -66,15 +69,22 @@ namespace NeuralNetworks2.Logic
             // 0 => 0, pomocne przy ustalaniu mocy sygnau
             float emph = 1.0f;
             if (Math.Abs(min) > EPSILON)
-                emph = Math.Max(emph, 1.0f / Math.Abs(min));
+                emph = Math.Max(emph, 1.0f/Math.Abs(min));
 
             if (Math.Abs(max) > EPSILON)
-                emph = Math.Min(emph, 1.0f / Math.Abs(max));
+                emph = Math.Min(emph, 1.0f/Math.Abs(max));
 
             if (emph > 1.0f)
             {
                 SoundSamples = SoundSamples
-                    .Select(x => x * emph)
+                    .Select(x =>
+                                {
+                                    if (x > NOISE_LEVEL_COEF)
+                                    {
+                                        x *= emph;
+                                    }
+                                    return x;
+                                })
                     .ToArray();
             }
         }
