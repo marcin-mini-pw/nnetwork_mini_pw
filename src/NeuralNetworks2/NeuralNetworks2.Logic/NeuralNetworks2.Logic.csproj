@@ -52,6 +52,7 @@
     <Compile Include="AudioRecorder.cs" />
     <Compile Include="AlgorithmsLogic.cs" />
     <Compile Include="FileIOLogic.cs" />
+    <Compile Include="GnuPlotUtil.cs" />
     <Compile Include="LightWaveFileReader.cs" />
     <Compile Include="LightWaveFileReaderException.cs" />
     <Compile Include="MFCCCoefficients.cs" />
