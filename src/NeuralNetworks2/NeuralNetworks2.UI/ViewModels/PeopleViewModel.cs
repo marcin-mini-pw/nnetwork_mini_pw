@@ -115,21 +115,15 @@ namespace NeuralNetworks2.UI.ViewModels
         public PeopleViewModel()
         {
             people = new ObservableCollection<Person>();
-
-
-            //TODO: usunąć
-            //***************************
-            //people.Add(new Person {FirstName = "Albert", SurName = "Skłodowski"});
-            //people.Add(new Person {FirstName = "Marcin", SurName = "Chwedczuk"});
-            //***************************
-
             People = CollectionViewSource.GetDefaultView(people);
         }
 
 
         private void AddNewPerson()
         {
-            people.Add(new Person {FirstName = "Neural", SurName = "Network"});
+            var newPerson = new Person {FirstName = "Neural", SurName = "Network"};
+            people.Add(newPerson);
+            People.MoveCurrentTo(newPerson);
         }
 
         private void DeletePerson()
@@ -209,6 +203,7 @@ namespace NeuralNetworks2.UI.ViewModels
         private void AddNewWaveFile(bool train)
         {
             var openFileDialog = new OpenFileDialog();
+            openFileDialog.Multiselect = true;
             openFileDialog.Filter =
                 String.Format("Wave files (*wav)|*wav|All files (*.*)|*.*");
             bool? result = openFileDialog.ShowDialog();
@@ -219,7 +214,10 @@ namespace NeuralNetworks2.UI.ViewModels
 
             var person = People.CurrentItem as Person;
             var waveFiles = train ? person.TrainWavesPaths : person.TestWavesPaths;
-            waveFiles.Add(openFileDialog.FileName);
+            foreach (var fileName in openFileDialog.FileNames)
+            {
+                waveFiles.Add(fileName);
+            }
         }
 
         private bool CanAddNewWaveFile(bool train)

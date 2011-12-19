@@ -18,6 +18,11 @@ namespace NeuralNetworks2.API.Logic
         /// </summary>
         string DefaultParamsFileExtension { get; }
 
+        /// <summary>
+        /// Domyśle rozszerzenie plików z zapisaną logiką.
+        /// </summary>
+        string DefaultAlgorithmsLogicFileExtension { get; }
+
 
         /// <summary>
         /// Zapisuje ludzi do pliku.
@@ -34,15 +39,31 @@ namespace NeuralNetworks2.API.Logic
         void SaveAlgorithmParameters(AlgorithmParams algorithmParams, string filePath);
 
         /// <summary>
+        /// Zapisuje logikę do pliku.
+        /// </summary>
+        /// <param name="algorithmsLogic"></param>
+        /// <param name="filePath">Ścieżka do pliku, w którym chcemy zapisać logikę.</param>
+        void SaveAlgorithmsLogic(IAlgorithmsLogic algorithmsLogic, string filePath);
+
+        /// <summary>
         /// Wczytuje ludzi z pliku.
         /// </summary>
         /// <param name="filePath">Ścieżka do pliku z zapisanymi ludźmi.</param>
+        /// <returns></returns>
         IList<Person> ReadPeople(string filePath);
 
         /// <summary>
         /// Wczytuje parametry algorytmu z pliku.
         /// </summary>
         /// <param name="filePath">Ścieżka do pliku z zapisanymi parametrami.</param>
+        /// <returns></returns>
         AlgorithmParams ReadAlgorithmParameters(string filePath);
+
+        /// <summary>
+        /// Wczytuje logikę z pliku.
+        /// </summary>
+        /// <param name="filePath">Ścieżka do pliku z zapisanymi parametrami.</param>
+        /// <returns></returns>
+        IAlgorithmsLogic ReadAlgorithmsLogic(string filePath);
     }
 }

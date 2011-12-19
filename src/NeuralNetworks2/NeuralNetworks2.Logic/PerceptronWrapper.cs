@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Encog.Engine.Network.Activation;
 using Encog.ML.Data;
@@ -12,6 +13,7 @@ namespace NeuralNetworks2.Logic
     /// <summary>
     /// Klasa stanowi wrapper wokol klas odpowiedzialnych za tworzenie perceptronu z Encog.
     /// </summary>
+    [Serializable]
     internal class PerceptronWrapper
     {
         // Siec neuronowa z Encog

@@ -1,4 +1,7 @@
-﻿using System.Windows.Input;
+﻿using System;
+using System.Windows.Input;
+using Microsoft.Win32;
+using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.UI.Tools;
 using NeuralNetworks2.UI.Windows;
 
@@ -15,6 +18,7 @@ namespace NeuralNetworks2.UI.ViewModels
         private readonly ListeningToVoicesViewModel listeningToVoicesViewModel;
 
         private RelayCommand newAlgorithmCommand;
+        private RelayCommand saveAlgorithmLogicCommand;
 
 
         /// <summary>
@@ -54,6 +58,14 @@ namespace NeuralNetworks2.UI.ViewModels
             }
         }
 
+        private static IFileIOLogic FileIOLogic
+        {
+            get
+            {
+                return LogicProvider.Instance.FileIOLogic;
+            }
+        }
+
         public ICommand NewAlgorithmCommand
         {
             get
@@ -61,7 +73,19 @@ namespace NeuralNetworks2.UI.ViewModels
                 return newAlgorithmCommand ??
                        (newAlgorithmCommand = new RelayCommand(param => NewAlgorithm(), param => CanNewAlgorithm()));
             }
-        }   
+        }
+
+
+        public ICommand SaveAlgorithmLogicCommand
+        {
+            get
+            {
+                return saveAlgorithmLogicCommand ??
+                       (saveAlgorithmLogicCommand =
+                        new RelayCommand(param => SaveAlgorithmLogic(), param => CanSaveAlgorithmLogic()));
+            }
+        }
+
 
 
         /// <summary>
@@ -89,9 +113,9 @@ namespace NeuralNetworks2.UI.ViewModels
         {
             var algorithmInitWindow = new AlgorithmInitWindow();
             bool? result = algorithmInitWindow.ShowDialog();
-            if(!result.HasValue || !result.Value)
+            if (!result.HasValue || !result.Value)
             {
-                if(closeIfCancel)
+                if (closeIfCancel)
                 {
                     OnRequestClose();
                 }
@@ -110,6 +134,34 @@ namespace NeuralNetworks2.UI.ViewModels
         private bool CanNewAlgorithm()
         {
             return !ListeningToVoicesViewModel.IsListening;
+        }
+
+        private static void SaveAlgorithmLogic()
+        {
+            var saveFileDialog = new SaveFileDialog();
+            SetGetLogicFileDialogExtensionAndFilter(saveFileDialog);
+            bool? result = saveFileDialog.ShowDialog();
+            if (!result.HasValue || !result.Value)
+            {
+                return;
+            }
+
+            var algLogic = LogicProvider.Instance.AlgorithmsLogic;
+            FileIOLogic.SaveAlgorithmsLogic(algLogic, saveFileDialog.FileName);
+        }
+
+        private bool CanSaveAlgorithmLogic()
+        {
+            return !ListeningToVoicesViewModel.IsListening;
+        }
+
+        private static void SetGetLogicFileDialogExtensionAndFilter(FileDialog fileDialog)
+        {
+            fileDialog.DefaultExt = FileIOLogic.DefaultAlgorithmsLogicFileExtension;
+
+            fileDialog.Filter =
+                String.Format("NeuralNetworks2 Logic File (*{0})|*{0}|All files (*.*)|*.*",
+                FileIOLogic.DefaultAlgorithmsLogicFileExtension);
         }
     }
 }

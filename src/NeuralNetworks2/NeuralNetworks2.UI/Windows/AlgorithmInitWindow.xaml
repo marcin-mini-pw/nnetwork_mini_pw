@@ -46,8 +46,25 @@
             </Storyboard>
         </Grid.Resources>
         
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+        <Grid
+            Grid.Row="0"
+            >
+            <Button
+                HorizontalAlignment="Left"
+                Width="300"
+                Content="Wczytaj z pliku"
+                Command="{Binding GetLogicFromFileCommand}"
+                />
+        </Grid>
+        
         <Border
             x:Name="PeopleBorder"
+            Grid.Row="1"
             Visibility="Visible"
             >
             <DockPanel
@@ -76,6 +93,7 @@
         
         <Border
             x:Name="AlgorithmParamsBorder"
+            Grid.Row="1"
             Visibility="Hidden"
             Background="White"
             >

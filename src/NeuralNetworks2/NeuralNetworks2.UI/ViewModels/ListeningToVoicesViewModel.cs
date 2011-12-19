@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.API.Model;
@@ -104,9 +105,21 @@ namespace NeuralNetworks2.UI.ViewModels
         private void StopListening()
         {
             IsListening = false;
-            var res = AlgorithmsLogic.StopRecordingAndGetResults();
-            Results = res.Take(Math.Min(res.Count, RecognizedPeopleToShowCount))
-                         .ToList();
+
+            IList<Tuple<Person, double>> res = null;
+            try
+            {
+                res = AlgorithmsLogic.StopRecordingAndGetResults();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format("Wystąpił błąd:\n{0}", ex.Message));
+            }
+
+            Results = res != null
+                          ? res.Take(Math.Min(res.Count, RecognizedPeopleToShowCount))
+                                .ToList()
+                          : null;
         }
 
         private bool CanStopListening()

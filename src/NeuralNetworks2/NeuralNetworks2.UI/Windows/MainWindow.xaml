@@ -21,6 +21,10 @@
                     Command="{Binding NewAlgorithmCommand}"
                     />
                 <MenuItem
+                    Header="_Zapisz"
+                    Command="{Binding SaveAlgorithmLogicCommand}"
+                    />
+                <MenuItem
                     Header="Za_kończ"
                     Command="{Binding CloseCommand}"
                     />

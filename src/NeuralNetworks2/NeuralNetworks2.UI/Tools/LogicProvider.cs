@@ -28,7 +28,7 @@ namespace NeuralNetworks2.UI.Tools
 
 
         public IFileIOLogic FileIOLogic { get; private set; }
-        public IAlgorithmsLogic AlgorithmsLogic { get; private set; }
+        public IAlgorithmsLogic AlgorithmsLogic { get; set; }
 
 
         private LogicProvider()

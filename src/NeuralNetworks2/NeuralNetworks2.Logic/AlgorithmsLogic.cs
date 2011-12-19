@@ -5,12 +5,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using NeuralNetworks2.API.Exceptions;
 using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.API.Model;
 
 namespace NeuralNetworks2.Logic {
-    public class AlgorithmsLogic : IAlgorithmsLogic {
+    [Serializable]
+    public class AlgorithmsLogic : IAlgorithmsLogic, IDeserializationCallback {
         /// <summary>
         /// Liczba wyjść pojedynczej sieci neuronowej.
         /// </summary>
@@ -45,7 +47,8 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Służy do nagrywania głosów z mikrofonu.
         /// </summary>
-        private readonly AudioRecorder audioRecorder = new AudioRecorder();
+        [NonSerialized] 
+        private AudioRecorder audioRecorder;
 
         /// <summary>
         /// Dla generowania wszelkich potrzebnych losowych wartości.
@@ -87,6 +90,12 @@ namespace NeuralNetworks2.Logic {
         /// Czy trwa nagrywanie dźwięków z mikrofonu.
         /// </summary>
         private bool WasAudioRecordingStarted { get; set; }
+
+
+        public AlgorithmsLogic()
+        {
+            audioRecorder = new AudioRecorder();
+        }
 
         /// <summary>
         /// Inicjalizuje logikę (w praktyce: buduje sieci neuronowe).
@@ -161,6 +170,12 @@ namespace NeuralNetworks2.Logic {
             WasTrained = true;
             return result;
         }
+
+        void IDeserializationCallback.OnDeserialization(object sender)
+        {
+            audioRecorder = new AudioRecorder();
+        }
+
 
         private void TrainPesonNetwork2(
             Dictionary<Person, List<double[]>[]> trainingMfccs,
