@@ -12,6 +12,7 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{algorithmic}
+\usepackage{float}
 \usepackage{algorithm}
 
 \floatname{algorithm}{Algorytm}
@@ -27,11 +28,28 @@
 	\maketitle
 	\tableofcontents
 	
-\section{Zadanie Rozpoznawania Mówcy}
-	Celem naszego projektu była ocena przydatności sieci neuronowych
-	w zadaniu rozpoznawania mówcy. TODO!
+\section{Wstęp}
+Celem projektu było stworzenie systemu identyfikacji osób na podstawie próbek ich głosu, bazującego na sieciach neuronowych. Zagadnienie leży w obszarze zainteresowań bardzo wielu naukowców na całym świecie, o czym świadczą liczne poświęcone mu artykuły i książki naukowe. Bezpośrednią przyczyną takiego stanu rzeczy są bez wątpienia bardzo liczne możliwe sposoby wykorzystania takiej technologii. Mogłaby ona posłużyć m.in. w celu kontroli dostępu do różnego rodzaju usług, np. obsługi kont bankowych przez telefon, dostępu do poufnych danych, sterowania urządzeń za pomocą głosu jedynie przez osoby do tego uprawnione itp.
 
-\section{Zbiór Danych Uczących i Walidacyjnych}
+Można wyróżnić co najmniej dwa podejścia do rozpoznawania głosu. Pierwszy z nich polega na rozpoznawaniu słów pochodzących z ograniczonego ich zbioru, drugi natomiast dotyczy rozpoznawania wypowiedzi dowolnej, czyli swobodnej, z nieograniczonego zbioru słów. Początkowo zakładaliśmy, że zajmiemy się tym pierwszym, prostszym przypadkiem. Wynikało to z obserwacji, że w artykułach naukowych, do których udało nam się dotrzeć (patrz: Bibliografia), dla tego prostszego przypadku uzyskiwano znacznie (można nawet rzec: nieporównywalnie) lepsze wyniki. Ostatecznie jednak zdecydowaliśmy się skierować naszą uwagę w kierunku rozpoznawania osób po ich dowolnej wypowiedzi. Wynikało to nie tylko z tego, że zagadnienie to wydaje się znacznie ciekawsze, ale także z prośby prowadzącego zajęcia.
+
+W kolejnych punktach niniejszego dokumentu prezentujemy dokładny opis zastosowanej przez nas metody, a także szczegółowe zestawienie otrzymanych za jej pomocą wyników.
+
+\section{Dane uczące i dane testowe}
+
+Danymi wejściowymi stworzonej przez nas aplikacji są pliki w formacie WAVE. Aby uniknąć problemów ze zniekształceniami sygnału mowy, aplikacja wymaga, by częstotliwość próbkowania wynosiła 44~100Hz przy 16 bitach przeznaczonych na próbkę. Sygnał musi być zapisany w wersji MONO.
+
+Nagrań wypowiedzi, które posłużyły za dane uczące oraz dane testowe podczas przeprowadzonych przez nas prób, dokonaliśmy za pomocą darmowego programu Audacity w wersji 1.2.6, przy wykorzystaniu mikrofonów komputerowych. Próbki po nagraniu nie były przetwarzane w żaden dodatkowy sposób. Zdecydowaną większość próbek zebraliśmy podczas zajęć laboratoryjnych. Pomimo tego, że podczas nagrywania w sali laboratoryjnej często panował dość duży hałas, nie wpłynął on negatywnie na jakość naszych nagrań, ponieważ zastosowane mikrofony były słabo czułe na taki zewnętrzny szum.
+
+Każdy z plików, którego używaliśmy za dane uczące lub dane testowe, zawierał nagraną krótką wypowiedź pojedynczej osoby - każdą z nich prosiliśmy o wypowiedzenie frazy: 
+,,tlen, kasza, żyzny, mini, ćma, ultra, krew, house, felicja, komputer''. Każdą osobę nagrywaliśmy co najmniej sześć razy. W kilku przypadkach zebrane za pierwszym razem dane były zbyt słabej jakości, co zmusiło nas do ponownego nagrywania tych samych osób.
+
+Tak uzyskane dane zostały przez nas losowo podzielone na dane służące do uczenia sieci oraz na dane służące do ich testowania. Danych uczących było więcej niż danych testowych. Z sześciu nagranych plików dla każdej osoby, cztery służyły do uczenia, a dwa do testowania sieci neuronowych.
+
+Początkowo zakładaliśmy, że - zgodnie z wymaganiami postawionymi przez prowadzącego zajęcia laboratoryjne - sieć zostanie nauczona ok. czterdziestu osób (w tym co najmniej dwudziestu studentów naszego wydziału). Jako że w początkowej fazie testów nie potrzebowaliśmy aż tak wielu danych, zebraliśmy wtedy próbki ok. 15 osób, w większości wchodzących w skład naszej grupy laboratoryjnej. Podczas prac nad aplikacją okazało się, że zastosowana przez nas metoda nie radzi sobie ze zbyt dużym zbiorem danych testowych i dane zebrane dla tych 15 osób były w zupełności wystarczające. Dlatego zaniechaliśmy nagrywania kolejnych osób.
+
+Stworzona przez nas aplikacja umożliwia testowanie nauczonych sieci neuronowych nie tylko na podstawie dostarczonych z góry danych testowych, ale także za pomocą próbek głosu nagrywanych na żywo podczas jej działania. Ta część aplikacji była bardzo trudna do testowania, co wynikało oczywiście z tego, że nie mieliśmy w ciągłej dyspozycji wszystkich osób, których uczyliśmy nasze sieci neuronowe.
+
 \section{Opis Zastosowanych Algorytmów}
 
 	\subsection{Opis Wykorzystywanej Sieci Neuronowej}
@@ -42,17 +60,17 @@
 	odpowiedzi 0 dla próbek głosu pozostałych osób. 
 	Wszystkie sieci będą uczone i testowane w ten sam sposób.  
 	
-	Każda z sieci $net_i$ będzie siecią typu perceptron wielowarstwowy oraz będzie posiadać
+	Każda z sieci $net_P$ będzie siecią typu perceptron wielowarstwowy oraz będzie posiadać
 	dwie warstwy ukryte. O wielkości warstw ukrytych będą decydować parametry $D_1$ oraz $D_2$
 	w następujący sposób:
 	\[ size(hidden_1) = \frac{size(input)}{D_1} \]
 	\[ size(hidden_2) = \frac{size(input)}{D_2} \] 
-	gdzie $size(hidden_1)$, $size(hidden_2)$ to odpowiednio rozmiary I i II warstwy ukrytej
+	gdzie $size(hidden_1)$, $size(hidden_2)$ to odpowiednio rozmiary I i II warstwy ukrytej,
 	a $size(input)$ to rozmiar wejścia. Zazwyczaj będziemy przyjmować $1 \leq D_1 < D_2$.
 	Każda z sieci będzie posiadała dokładnie jedno wyjście zwracające wartości z przedziału $[0, 1]$.
 	
 	W opisanych wyżej sieciach będziemy stosować neurony o sigmoidalnej funkcji aktywacji 
-	($f(x) = \frac{1}{1+\exp(-x)}$), dodatkowo będziemy stosować wzmocnienie(bias).
+	($f(x) = \frac{1}{1+\exp(-x)}$), dodatkowo będziemy stosować wzmocnienie (bias).
 	
 	Każda z sieci będzie uczona za pomocą standardowego algorytmu wstecznej propagacji błędów
 	(backpropagation). W algorytmie backpropagation będziemy stosować
@@ -67,6 +85,56 @@
 	
 	Sieci neuronowe w naszej aplikacji zostały zaimplementowane za pomocą darmowej do
 	zastosowań niekomercyjnych biblioteki Encog w wersji 3.0.1.
+	
+	\subsubsection*{Algorytm nauki pojedynczej sieci neuronowej}	
+	\begin{algorithm}[h]
+		\begin{algorithmic}[1]
+			\STATE \textbf{input} person
+			\STATE
+			\STATE network $\leftarrow$ InitNetwork()
+			\FOR{$0 < $ i $ < $ MAX-ITERATIONS}
+				\STATE expectedAnswer $\leftarrow$ 1
+				\STATE trainingData $\leftarrow$ DrawNetworkInput(person)
+				\IF{\textbf{rnd}$(0, 1)$ $<$ TCOEF}
+					\STATE other $\leftarrow$ SelectOtherPerson(person);
+					\STATE expectedAnswer $\leftarrow$ 0
+					\STATE trainingData $\leftarrow$ DrawNetworkInput(other)				
+				\ENDIF
+				\STATE
+				\STATE $\eta_i \leftarrow \frac{\eta}{\sqrt{i + 1}}$
+				\STATE $\mu_i \leftarrow \frac{\mu}{\sqrt{i + 1}}$
+				\STATE				
+				\STATE \textbf{backpropagation}(network, $\eta_i$, $\mu_i$, expectedAnswer, trainingData)
+				\STATE
+				\STATE \COMMENT{Every 1000 iterations check if network error}
+				\STATE \COMMENT{is acceptable}
+				\STATE error $\leftarrow$ GetNetworkError(network, GetPersonTestSet(person))
+				\IF{error $<$ MAX-ERROR}
+					\STATE \textbf{break}
+				\ENDIF
+			\ENDFOR
+			\STATE
+			\RETURN network
+		\end{algorithmic}			
+		\caption{Algorytm nauki pojedynczej sieci neuronowej przeznaczonej dla osoby $person$}
+		\label{alg:nnnlearn}
+	\end{algorithm}
+	Na listingu \ref{alg:nnnlearn} przedstawiono algorytm nauki pojedynczej sieci neuronowej przeznaczonej
+	do rozpoznawania osoby $person$. W algorytmie występują następujące stałe, będące parametrami nauki:
+	\begin{description}
+		\item[MAX-ITERATIONS] 
+			Maksymalna liczba iteracji przeznaczona na naukę pojedynczej sieci,
+			w programie ten parametr przyjmuje wartość 160 tysięcy iteracji.
+		\item[TCOEF]
+			Współczynnik znajomości, niestety testy wykazały że wartość tego parametru powinna zawsze
+			wynosić 0.5 (przy założeniu że \textbf{rnd}$(0,1)$ zwraca liczbę losową z przedziału $(0, 1)$).
+		\item[MAX-ERROR]
+			Maksymalny dopuszczalny błąd na zbiorze walidacyjnym, jeżeli sieć osiąga mniejszy błąd
+			niż MAX-ERROR to dalsza
+			nauka jest przerywana
+	\end{description}
+	Zauważmy że algorytm nauki sieci jest wysoce niedeterministyczny: zarówno osoby jak i wybór próbki
+	uczącej są dokonywane w sposób losowy.
 	
 	\subsubsection*{Algorytm obliczania błędu sieci na zbiorze walidacyjnym}
 	\begin{algorithm}[h]
@@ -159,7 +227,7 @@
 		\subsubsection*{Algorytm Ekstrakcji Cech}
 		W tej części dokumentu przedstawimy algorytmy służące do 
 		wyodrębniania charakterystycznych cech mowy, omówimy również
-		towarzyszące im parametry. Tabel \ref{tab:ftextractparams} zawiera
+		towarzyszące im parametry. Tabela \ref{tab:ftextractparams} zawiera
 		opis parametrów algorytmów, listingi \ref{alg:ftextract}, \ref{alg:extractframe}
 		oraz \ref{alg:getmfcc} prezentują pseudokody wykorzystywanych algorytmów.
 		\begin{table}[h]
@@ -268,7 +336,7 @@
 			\label{alg:getmfcc}
 		\end{algorithm}	
 
-	
+	\clearpage
 	\subsection{Opis Algorytmu Rozpoznawania Mówcy}
 	
 		Listing \ref{alg:recognise} zawiera pseudokod algorytmu wykorzystywanego 
@@ -336,6 +404,7 @@
 			\caption{RecogniseSpeaker - Algorytm rozpoznawania mówcy}
 			\label{alg:recognise}
 		\end{algorithm}
+		\clearpage
 	
 \section{Omówienie Uzyskanych Wyników}
 	\subsection{Metodologia testowania}
