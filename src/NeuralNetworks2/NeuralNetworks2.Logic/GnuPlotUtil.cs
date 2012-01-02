@@ -3,13 +3,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using NeuralNetworks2.API.Model;
+using System.Collections.Generic;
 
 namespace NeuralNetworks2.Logic {
     /// <summary>
     /// Obsluga gnuplota
     /// </summary>
     class GnuPlot {
-        private const string GNU_PLOT_PATH = @"E:\Projekty\nnetwork_mini_pw\src\NeuralNetworks2\gnuplot\binary\gnuplot.exe";
+        private const string GNU_PLOT_PATH = @"d:\tools\gnuplot\binary\gnuplot.exe";
 
         private string _plotTitle;
         private string _plotPath;
@@ -50,6 +51,21 @@ namespace NeuralNetworks2.Logic {
                 );
         }
 
+        /// <summary>
+        /// Dodaje punkty (x,y1) i (x,y2) do wykresu
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public void AddDataPoint(double x, double yLearnSet, double yTestSet) {
+            if (_plotDataFile == null) {
+                throw new InvalidOperationException("First call BeginPlot()");
+            }
+
+            _plotDataFile.WriteLine(
+                String.Format(CultureInfo.InvariantCulture, "{0}\t{1}\t{2}", x, yLearnSet, yTestSet)
+                );
+        }
+
         public void AddAlgorithmParamsToTitle(AlgorithmParams algParams) {
             string paramsString = String.Format(
                 CultureInfo.InvariantCulture,
@@ -62,34 +78,45 @@ namespace NeuralNetworks2.Logic {
             _plotTitle += paramsString;
         }
 
-        public void EndPlot() {
-            _plotDataFile.Close();
-
+        private void ExecuteGnuPlotCommands(string commands) {
             ProcessStartInfo psi = new ProcessStartInfo(
                 GNU_PLOT_PATH,
-                String.Format(
-                    @"-e ""set terminal png;set output '{0}';set title '{1}';{3}plot '{2}' notitle with lines""",
-                    _plotPath, _plotTitle, _tmpFileName,
-                    (_normYRange) ? String.Format(CultureInfo.InvariantCulture, "set yrange [{0}:{1}];", _minYRange, _maxYRange) : ""
-                    )
+                String.Format(@"-e ""{0}""", commands)
                 );
 
             psi.UseShellExecute = false;
 
             Process proc = Process.Start(psi);
             proc.WaitForExit(8000);
+        }
+
+        public void EndPlot() {
+            _plotDataFile.Close();
+
+            string commandString = String.Format(
+                @"set terminal png;set output '{0}';set grid;set title '{1}';{3}plot '{2}' notitle with lines",
+                _plotPath, _plotTitle, _tmpFileName,
+                (_normYRange) ? String.Format(CultureInfo.InvariantCulture, "set yrange [{0}:{1}];", _minYRange, _maxYRange) : ""
+                );
+            ExecuteGnuPlotCommands(commandString);
 
             File.Delete(_tmpFileName);
         }
 
         /// <summary>
-        /// Tworzy wykres w formacie png na podstawie danych z pliku dataFileName.
-        /// Zapisuje wykres pod nazwa plotFileName.
+        /// Tworzy 2 wykres (2 wyresy na 1dnym)
         /// </summary>
-        /// <param name="dataFileName"></param>
-        /// <param name="plotFileName"></param>
-        public static void Plot(string dataFileName, string plotFileName) {
-            
+        public void End2Plot() {
+            _plotDataFile.Close();
+
+            string commandString = String.Format(
+                @"set terminal png;set output '{0}';set title '{1}';set grid;{3}plot '{2}' using 1:2 title 'Zbior uczacy' with lines lt rgb 'red', '{2}' using 1:3 title 'Zbior testowy' with lines lt rgb 'blue'",
+                _plotPath, _plotTitle, _tmpFileName,
+                (_normYRange) ? String.Format(CultureInfo.InvariantCulture, "set yrange [{0}:{1}];", _minYRange, _maxYRange) : ""
+                );
+            ExecuteGnuPlotCommands(commandString);
+
+            File.Delete(_tmpFileName);
         }
     }
 }

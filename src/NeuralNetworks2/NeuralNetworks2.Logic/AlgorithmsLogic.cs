@@ -32,12 +32,17 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Maksymalny błąd dopuszczalny dla zbioru testowego.
         /// </summary>
-        private const double TestSetMaxError = 0.04d;
+        private const double TestSetMaxError = 0.01d;
 
         /// <summary>
         /// Maksymalna liczba iteracji uczenia pojedynczej sieci.
         /// </summary>
         private const int MaxIterationCounts = 160000;//400000;
+
+        /// <summary>
+        /// Prog powyzej ktorego uznajemy odpowiedz sieci za znaczaca.
+        /// </summary>
+        private const double THRESHOLD = 0.65;
 
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
@@ -47,7 +52,7 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Służy do nagrywania głosów z mikrofonu.
         /// </summary>
-        [NonSerialized] 
+        [NonSerialized]
         private AudioRecorder audioRecorder;
 
         /// <summary>
@@ -92,8 +97,7 @@ namespace NeuralNetworks2.Logic {
         private bool WasAudioRecordingStarted { get; set; }
 
 
-        public AlgorithmsLogic()
-        {
+        public AlgorithmsLogic() {
             audioRecorder = new AudioRecorder();
         }
 
@@ -151,8 +155,8 @@ namespace NeuralNetworks2.Logic {
 
             var result = new Dictionary<Person, double>();
 
-            Dictionary<Person, List<double[]>[]> trainingMfccs  = GetAllPeopleTrainingDataMfccs();
-            Dictionary<Person, List<double[]>[]> testMfccs      = GetAllPeopleTestDataMfccs();
+            Dictionary<Person, List<double[]>[]> trainingMfccs = GetAllPeopleTrainingDataMfccs();
+            Dictionary<Person, List<double[]>[]> testMfccs = GetAllPeopleTestDataMfccs();
 
             double[] input = new double[GetNetworksInputSize()];
             double[][] answer = new double[][] { new double[1] };
@@ -161,23 +165,26 @@ namespace NeuralNetworks2.Logic {
                 Debug.WriteLine("Train person: {0}", person.FirstName, null);
 
                 PerceptronWrapper network = neuralNetworks[person];
-                TrainPesonNetwork2(trainingMfccs, testMfccs, input, answer, person, network);
+                TrainPersonNeuralNetwork(trainingMfccs, testMfccs, input, answer, person, network);
 
-                // Przetestuj nauczona siec
-                result.Add(person, HardTest_Threshold(person, testMfccs, input));
+                result.Add(person, TestPersonNeuralNetwork(person, testMfccs, input));
             }
 
             WasTrained = true;
+            PrintTotalError(result);
             return result;
         }
 
-        void IDeserializationCallback.OnDeserialization(object sender)
-        {
+        private void PrintTotalError(Dictionary<Person, double> result) {
+            double totalError = result.Sum(x => x.Value);
+            Debug.WriteLine("Total error: {0}", totalError / result.Count);
+        }
+
+        void IDeserializationCallback.OnDeserialization(object sender) {
             audioRecorder = new AudioRecorder();
         }
 
-
-        private void TrainPesonNetwork2(
+        private void TrainPersonNeuralNetwork(
             Dictionary<Person, List<double[]>[]> trainingMfccs,
             Dictionary<Person, List<double[]>[]> testMfccs,
             double[] input, double[][] answer, Person person,
@@ -185,7 +192,7 @@ namespace NeuralNetworks2.Logic {
 
             GnuPlot plot = new GnuPlot(
                 person.FullName,
-                @"D:\GIT\nnetwork_mini_pw\charts\d_chart_" + person.FullName.Replace(' ', '_') + ".png"
+                @"d:\tmp\plot_" + person.FullName.Replace(' ', '_') + ".png"
                 );
             plot.BeginPlot();
 
@@ -196,22 +203,20 @@ namespace NeuralNetworks2.Logic {
                 double expectedAnswer;
 
                 if (Random.NextDouble() < algorithmParams.TCoef) {
-                    expectedAnswer = 0.0d;
-                    Person otherPerson = SelectOtherPerson(person);
-                    personMfccs = trainingMfccs[otherPerson];
+                    expectedAnswer      = 0.0d;
+                    Person otherPerson  = SelectOtherPerson(person);
+                    personMfccs         = trainingMfccs[otherPerson];
                 }
                 else {
-                    expectedAnswer = 1.0d;
-                    personMfccs = trainingMfccs[person];
+                    expectedAnswer      = 1.0d;
+                    personMfccs         = trainingMfccs[person];
                 }
 
-                // Losujemy ramki na ktorych bedziemy uczyc siec, ramki musza wystepowac po sobie
-                // bez przerws
                 DrawInputData(input, personMfccs);
 
-                double scale = Math.Sqrt(1.0 + iterations);
-                double newLearningRate = algorithmParams.LearningRate / scale;
-                double newMomentum = algorithmParams.Momentum / scale;
+                double scale            = Math.Sqrt(1.0 + iterations);
+                double newLearningRate  = algorithmParams.LearningRate / scale;
+                double newMomentum      = algorithmParams.Momentum / scale;
 
                 answer[0][0] = expectedAnswer;
                 network.Train(newLearningRate, 1, newMomentum,
@@ -221,62 +226,34 @@ namespace NeuralNetworks2.Logic {
                 iterations++;
 
                 if (iterations % 1000 == 0) {
-                    double testResult = HardTest_Threshold(person, testMfccs, input);
-                    plot.AddDataPoint(iterations, testResult);
+                    double testResult   = TestPersonNeuralNetwork(person, testMfccs, input);
+                    double learnResult  = TestPersonNeuralNetwork(person, trainingMfccs, input);
+                    AddPlotPoint(plot, iterations, learnResult, testResult);
 
-                    string line = String.Format(CultureInfo.InvariantCulture, "{0}\t{1}", iterations, testResult);
-                    Debug.WriteLine(line);
-
-                    if (testResult <= TestSetMaxError) {
-                        break;
-                    }
+                   // if (testResult <= TestSetMaxError) {
+                   //     break;
+                   //  }
                 }
             }
 
             plot.AddAlgorithmParamsToTitle(algorithmParams);
-            plot.EndPlot();
+            plot.End2Plot();
         }
 
-        private void TrainPesonNetwork(
-            Dictionary<Person, List<double[]>[]> trainingMfccs, 
-            double[] input, double[][] answer, Person person, 
-            PerceptronWrapper network) {
+        private static void AddPlotPoint(GnuPlot plot, int iterations, double learnResult, double testResult) {
+            plot.AddDataPoint(iterations, learnResult, testResult);
 
-            // dla kazdego pliku uczacego lista mfcc dla kolejnych ramek glosu
-            List<double[]>[] personMfccs = trainingMfccs[person];
-
-            int iterations  = 0;
-
-            while (iterations < MaxIterationCounts) {
-                double expectedAnswer = 1.0d;
-                
-                if (Random.NextDouble() < algorithmParams.TCoef) {
-                    expectedAnswer = 0.0d;
-                    Person otherPerson = SelectOtherPerson(person);
-                    personMfccs = trainingMfccs[otherPerson];
-                }
-                else {
-                    personMfccs = trainingMfccs[person];
-                }
-
-                // Losujemy ramki na ktorych bedziemy uczyc siec, ramki musza wystepowac po sobie
-                // bez przerws
-                DrawInputData(input, personMfccs);
-
-                answer[0][0] = expectedAnswer;
-                network.Train(algorithmParams.LearningRate, 1, algorithmParams.Momentum,
-                    new[] { input },
-                    answer);
-
-                iterations++;
-            }
+            string line = String.Format(CultureInfo.InvariantCulture, "{0}\t{1}", iterations, testResult);
+            Debug.WriteLine(line);
         }
 
         private void DrawInputData(double[] input, List<double[]>[] personMfccs) {
             // Wylosuj numer pliku z ktorego pobierzemy dane
             int file = Random.Next(personMfccs.Length);
+
             // Wylosuj poczatek ciagu ramek
             int start = Random.Next(personMfccs[file].Count - algorithmParams.SignalFramesCount);
+
             // Kopiuj sygnal do tablicy input
             for (int k = 0; k < algorithmParams.SignalFramesCount; k++) {
                 double[] frameMfcc = personMfccs[file][start + k];
@@ -286,12 +263,23 @@ namespace NeuralNetworks2.Logic {
             }
         }
 
+        /// <summary>
+        /// Losowo wybiera osobe rozna od przekazanej jako parametr.
+        /// </summary>
+        /// <param name="person"></param>
+        /// <returns></returns>
         private Person SelectOtherPerson(Person person) {
-            int otherPersonInd = Random.Next(neuralNetworks.Count);
-            Person otherPerson = people[otherPersonInd];
+            int     otherPersonIndex    = Random.Next(people.Count);
+            Person  otherPerson         = people[otherPersonIndex];
+
             if (otherPerson == person) {
-                otherPerson = people[(otherPersonInd + 1) % neuralNetworks.Count];
+                int otherPersonsCount   = people.Count - 1;
+                Debug.Assert(otherPersonsCount >= 1);
+
+                int newOtherPersonIndex = otherPersonIndex + Random.Next(otherPersonsCount) + 1;
+                otherPerson = people[newOtherPersonIndex % people.Count];
             }
+
             return otherPerson;
         }
 
@@ -321,106 +309,67 @@ namespace NeuralNetworks2.Logic {
                 throw new InvalidOperationException("You have to start recording first!");
             }
 
-            var stream = audioRecorder.StopRecording();
-            List<double[]> mfccs = GetMfccsFromStream(stream);
-            //var results = GetResults(mfccs);// GetResults_AllTheresholdStrategy(mfccs);
-            var results = GetResults_AllMaxStrategy(mfccs);
+            var stream   = audioRecorder.StopRecording();
+            var mfccs    = GetMfccsFromStream(stream);
+
+            var results = RecogniseSpeaker(mfccs);
 
             results.Sort((x, y) => y.Item2.CompareTo(x.Item2));
             WasAudioRecordingStarted = false;
+
             return results;
         }
 
-        private List<Tuple<Person, double>> GetResults(List<double[]> mfccs) {
-            var results = new List<Tuple<Person, double>>();
+        private double NormalizeResult(double result) {
+            const double NORM_POWER = 0.5;
 
-            const int DRAW_NUMBER = 10;
-            double[] input = new double[GetNetworksInputSize()];
-
-            foreach (Person person in people) {
-                PerceptronWrapper network = neuralNetworks[person];
-
-                double networkResults = 0.0f;
-                foreach (int i in Enumerable.Range(0, DRAW_NUMBER)) {
-                    DrawInputData(input, new[] { mfccs });
-                    networkResults += network.Compute(new[] { input })[0][0];
-                }
-                // Obliczamy srednio z DRAW_NUMBER prob rozpoznania glosu
-                networkResults /= DRAW_NUMBER;
-                results.Add(new Tuple<Person, double>(person, networkResults));
+            double certanity = 0.0;
+            if (result >= THRESHOLD) {
+                certanity = result;
+                return result * Math.Pow((result - THRESHOLD) / (1.0 - THRESHOLD), NORM_POWER);
             }
-            return results;
+            else {
+                return result * Math.Pow(((1.0 - result) - THRESHOLD) / (1.0 - THRESHOLD), 1.0 / NORM_POWER);
+            }
         }
 
-        const double THRESEHOLD = 0.75;
-        private List<Tuple<Person, double>> GetResults_AllTheresholdStrategy(List<double[]> mfccs) {
-            
-            var results = new List<Tuple<Person, double>>();
-            var mfccArray = mfccs.ToArray();
+        private List<Tuple<Person, double>> RecogniseSpeaker(List<double[]> mfccs) {
+            var results     = new List<Tuple<Person, double>>();
+            var mfccArray   = mfccs.ToArray();
 
-            double[] input = new double[GetNetworksInputSize()];
+            double[]    input           = new double[GetNetworksInputSize()];
+            int         totalSamples    = 0;
 
-            Dictionary<Person, double> resultsPerNetwork = new Dictionary<Person, double>();
-            foreach (var person in people)
-                resultsPerNetwork[person] = 0.0f;
+            Dictionary<Person, double>  resultsPerNetwork   = new Dictionary<Person, double>();
+            Dictionary<Person, int>     samplesPerNetwork   = new Dictionary<Person, int>();
+            Dictionary<Person, GnuPlot> plots               = new Dictionary<Person, GnuPlot>();
 
-            for (int start = 0; start < mfccArray.Length - algorithmParams.SignalFramesCount; start++) {
-                for (int i = 0; i < algorithmParams.SignalFramesCount; i++) {
-                    Array.Copy(mfccArray[start + i], 0, input, algorithmParams.MfccCount * i, algorithmParams.MfccCount);
-                }
-
-                var result = from p in people
-                             let network = neuralNetworks[p]
-                             select new KeyValuePair<Person, double>(p, network.Compute(new[] { input })[0][0]);
-
-                foreach (var r in result) {
-                    if (r.Value > THRESEHOLD) {
-                        resultsPerNetwork[r.Key] += r.Value;
-                    }
-                }
-            }
-
-            double sum = resultsPerNetwork.Sum(x => x.Value);
-            if (Math.Abs(sum) < 0.001)
-                return results; // Empty list
-
-            var normResults = from r in resultsPerNetwork
-                              select new Tuple<Person, double>(r.Key, r.Value / sum);
-
-            return normResults.ToList();
-        }
-
-        private List<Tuple<Person, double>> GetResults_AllMaxStrategy(List<double[]> mfccs) {
-            var results = new List<Tuple<Person, double>>();
-            var mfccArray = mfccs.ToArray();
-
-            double[] input = new double[GetNetworksInputSize()];
-
-            Dictionary<Person, double> resultsPerNetwork = new Dictionary<Person, double>();
-            Dictionary<Person, int> samplesPerNetwork = new Dictionary<Person, int>();
-            Dictionary<Person, GnuPlot> plots = new Dictionary<Person, GnuPlot>();
             foreach (var person in people) {
                 resultsPerNetwork[person] = 0.0f;
                 samplesPerNetwork[person] = 0;
-                plots[person] = new GnuPlot(person.FullName, @"d:\tmp\rplot_" + person.FullName.Replace(' ', '_') + ".png");
+                plots[person] = new GnuPlot(person.FullName, GetRecognitionPlotFileName(person));
                 plots[person].BeginPlot();
             }
 
             for (int start = 0; start < mfccArray.Length - algorithmParams.SignalFramesCount; start++) {
-                for (int i = 0; i < algorithmParams.SignalFramesCount; i++) {
-                    Array.Copy(mfccArray[start + i], 0, input, algorithmParams.MfccCount * i, algorithmParams.MfccCount);
-                }
+                CopyInputData(input, mfccArray, start);
 
-                var result = (from p in people
-                             let network = neuralNetworks[p]
-                             select new KeyValuePair<Person, double>(p, network.Compute(new[] { input })[0][0])).ToArray();
+                var result = from person in people
+                              let network = neuralNetworks[person]
+                              select new KeyValuePair<Person, double>(
+                                  person, 
+                                  network.Compute(new[] { input })[0][0]
+                                  );
 
                 foreach (var r in result) {
                     plots[r.Key].AddDataPoint(start, r.Value);
 
-                    if (r.Value > THRESEHOLD || r.Value < (1.0 - THRESEHOLD)) {
-                        samplesPerNetwork[r.Key]++;
-                        resultsPerNetwork[r.Key] += r.Value;
+                    if (r.Value > THRESHOLD || r.Value < (1.0 - THRESHOLD)) {
+                        //samplesPerNetwork[r.Key]++;
+                        resultsPerNetwork[r.Key] += (r.Value > THRESHOLD) ? r.Value : (r.Value - 1.0);// NormalizeResult(r.Value);
+
+                        if(r.Value > THRESHOLD)
+                            totalSamples++;
                     }
                 }
             }
@@ -430,21 +379,30 @@ namespace NeuralNetworks2.Logic {
                 plots[p].EndPlot();
             }
 
-            var finalResults = from p in people
-                          let samples = samplesPerNetwork[p]
-                          let res = resultsPerNetwork[p]
-                          let norm = (samples == 0) ? 0 : (res / samples)
-                          select new Tuple<Person, double>(p, norm);
+            var finalResults = from person in people
+                               let res = Math.Max(0, resultsPerNetwork[person])
+                               let norm = res / (double)totalSamples
+                               select new Tuple<Person, double>(person, norm);
+            //var finalResults = from person in people
+            //                   let samples  = samplesPerNetwork[person]
+            //                   let res      = resultsPerNetwork[person]
+            //                   let norm     = (samples == 0) ? 0 : (res / (double)samples)
+            //                   select new Tuple<Person, double>(person, norm);
 
             return finalResults.ToList();
+        }
+
+        private static string GetRecognitionPlotFileName(Person person) {
+            return @"d:\tmp\rplot_" + person.FullName.Replace(' ', '_') + ".png";
         }
 
 
         private void CreateNeuralNetworks() {
             neuralNetworks = new Dictionary<Person, PerceptronWrapper>();
 
-            int inputSize = GetNetworksInputSize();
-            ICollection<int> hiddenLayers = GetLayersCount(inputSize);
+            int                 inputSize       = GetNetworksInputSize();
+            ICollection<int>    hiddenLayers    = GetLayersCount(inputSize);
+
             foreach (var person in people) {
                 var perceptron = new PerceptronWrapper(inputSize, hiddenLayers, NeuralNetworkOutputSize, UseBias,
                                                        UseUniPolarActivationFunction);
@@ -457,11 +415,10 @@ namespace NeuralNetworks2.Logic {
         }
 
         private int[] GetLayersCount(int inputSize) {
-            var inputSizeD = (double)inputSize;
             var layers = new int[HiddenLayerNeuronsCountCoefs.Length];
 
             for (int i = 0; i < layers.Length; ++i) {
-                layers[i] = Convert.ToInt32(inputSizeD / HiddenLayerNeuronsCountCoefs[i]);
+                layers[i] = Convert.ToInt32( inputSize / HiddenLayerNeuronsCountCoefs[i] );
             }
 
             return layers;
@@ -477,15 +434,15 @@ namespace NeuralNetworks2.Logic {
 
         private Dictionary<Person, List<double[]>[]> GetAllPeopleMfccsHelper(
             Func<Person, ObservableCollection<string>> getWavesPaths) {
+
             var mfccs = new Dictionary<Person, List<double[]>[]>();
             foreach (Person person in people) {
-                ObservableCollection<string> wavesPaths = getWavesPaths(person);
+                var wavesPaths  = getWavesPaths(person);
                 var personMfccs = new List<double[]>[wavesPaths.Count];
+
                 for (int i = 0; i < wavesPaths.Count; ++i) {
                     personMfccs[i] = GetMfccsFromFile(wavesPaths[i]);
                 }
-
-                
 
                 mfccs.Add(person, personMfccs);
             }
@@ -512,18 +469,40 @@ namespace NeuralNetworks2.Logic {
 
         #region MFCC Stuff
 
-
+        /// <summary>
+        /// Czestosc probkowania, u nas stala.
+        /// </summary>
         private const int FREQUENCY = 44100;
-        const int WINDOW_SIZE = 1024;
-        const int OVERLAP = 512;
-        const int FILTERS_NUMBER = 27;
+        
+        /// <summary>
+        /// Rozmiar okna 1024, co daje nam 23ms
+        /// </summary>
+        private const int WINDOW_SIZE = 512;
+
+        /// <summary>
+        /// Jak okna sie nakladaja.
+        /// </summary>
+        private const int OVERLAP = WINDOW_SIZE / 2;
+
+        /// <summary>
+        /// Ilosc filtrow trojkatnych.
+        /// </summary>
+        private const int FILTERS_NUMBER = 24;
+
+        /// <summary>
+        /// Tworzymy bank filtrow (jego tworzenie jest kosztowne i powinno obdyc sie
+        /// tylko raz.
+        /// </summary>
         private static double[][] filters =
             TriFilterBank.CreateFiltersBank(FILTERS_NUMBER, WINDOW_SIZE, FREQUENCY, 0, 8000);
 
-        const double SPEAK_POWER_THRESHOLD = 0.05;//0.022; // Ustalone empirycznie
+        /// <summary>
+        /// Kiedy uznajemy ze na wejsciu jest sygnal mowy
+        /// </summary>
+        const double SPEAK_POWER_THRESHOLD = 0.022; //0.05; // Ustalone empirycznie
 
         /// <summary>
-        /// Zwaraca lite wsp. mfcc dla kolejnych ramek sgnalu mowy
+        /// Zwaraca liste wsp. mfcc dla kolejnych ramek sgnalu mowy
         /// </summary>
         /// <param name="wave"></param>
         /// <returns></returns>
@@ -533,52 +512,18 @@ namespace NeuralNetworks2.Logic {
 
             const int WIN_DELTA = WINDOW_SIZE - OVERLAP;
 
-            var results = new List<double[]>();
-            var windowData = new double[WINDOW_SIZE];
-            double[] tmp = new double[algorithmParams.MfccCount];
+            var results     = new List<double[]>();
+            var windowData  = new double[WINDOW_SIZE];
 
-            double aproxSpeakThreshold = SPEAK_POWER_THRESHOLD;
+            for (int windowBegining = 0; windowBegining < wave.SamplesCount - WINDOW_SIZE; windowBegining += WIN_DELTA) {
+                CopyWindowData(wave, windowData, windowBegining);
 
-            //FileStream fs = new FileStream("d:/tmp/tracks.txt", FileMode.Append);
-            //StreamWriter sw = new StreamWriter(fs);
-
-            //wave.NormalizeWaveSamples();
-           
-            for (int i = 0; i < wave.SamplesCount - WINDOW_SIZE; i += WIN_DELTA) {
-                double power = 0.0f;
-                for (int j = 0; j < WINDOW_SIZE; j++) {
-                    windowData[j] = wave.SoundSamples[i + j];
-                    power += Math.Abs(windowData[j]);
+                double power = windowData.Sum(x => Math.Abs(x)) / WINDOW_SIZE;
+                if (power > SPEAK_POWER_THRESHOLD) {
+                    var mfcc = MFCCCoefficients.GetMFCC(FREQUENCY, windowData, filters, algorithmParams.MfccCount);
+                    results.Add(mfcc);
                 }
-                power /= WINDOW_SIZE;
-
-                if (power > aproxSpeakThreshold) {
-                    //Debug.WriteLine("power: {0}", power);
-                    double signalPower;
-                    var mfcc = MFCCCoefficients.GetMFCC(FREQUENCY, windowData, filters, algorithmParams.MfccCount, out signalPower);
-                
-                    //sw.Write('X');
-                    double sum = 0.0f;
-                    for (int k = 0; k < algorithmParams.MfccCount; ++k) {
-                        tmp[k] = mfcc[k];
-                        sum += tmp[k] * tmp[k];
-                    }
-                    // Normalize data
-                    //if (sum > 0.0001) {
-                    //    sum = Math.Sqrt(sum);
-                    //    for (int k = 0; k < algorithmParams.MfccCount; ++k) {
-                    //        tmp[k] /= sum;
-                    //    }
-                    //}
-
-                    results.Add(tmp);
-                    tmp = new double[algorithmParams.MfccCount];
-                }
-                //else sw.Write('_');
             }
-
-            //sw.WriteLine();
-            //sw.Close();
 
             if (results.Count < algorithmParams.SignalFramesCount) {
                 throw new ArgumentException("Too little usable voice samples found in wave file");
@@ -588,55 +533,34 @@ namespace NeuralNetworks2.Logic {
             return results;
         }
 
-        #endregion
+        private void CopyWindowData(LightWaveFileReader wave, double[] windowData, int windowBegining) {
+            Debug.Assert(windowData.Length == WINDOW_SIZE);
 
-        /// <summary>
-        /// Wykonuje testy dla danej osoby na zbiorach testowych.
-        /// </summary>
-        /// <param name="person">Osoba, której sieć chcemy przetestować.</param>
-        /// <param name="testSetMfccs">Współczynniki MFCC dla wszystkich próbek testowych dla wszystkich osób.</param>
-        /// <returns>Błąd sieci odpowiadającej zadanej osobie na zbiorze testowym.</returns>
-        private double Test(Person testedPerson, Dictionary<Person, List<double[]>[]> testSet, double[] input) {
-            Debug.Assert(NeuralNetworkOutputSize == 1);
-
-            const int TEST_COUNT = 50; // Ile razy losujemy probki do testow
-            PerceptronWrapper network = neuralNetworks[testedPerson];
-            double error = 0.0d;
-
-            foreach (Person person in people) {
-                double answer = (person == testedPerson) ? 1.0 : 0.0;
-
-                foreach (int tmp in Enumerable.Range(0, TEST_COUNT)) {
-                    DrawInputData(input, testSet[person]);
-                    double networkAnswer = network.Compute(new[] { input })[0][0];
-
-                    error += Math.Abs(answer - networkAnswer);
-                }
+            for (int i = 0; i < WINDOW_SIZE; i++) {
+                windowData[i] = wave.SoundSamples[windowBegining + i];
             }
-
-            return error / (TEST_COUNT * people.Count);
         }
 
-        private double HardTest_Threshold(Person testedPerson, Dictionary<Person, List<double[]>[]> testSet, double[] input) {
-            Debug.Assert(NeuralNetworkOutputSize == 1);
+        #endregion
 
-            PerceptronWrapper network = neuralNetworks[testedPerson];
-            double error = 0.0d;
-            int testCases = 0;
+        private double TestPersonNeuralNetwork(Person testedPerson, Dictionary<Person, List<double[]>[]> testSet, double[] input) {
+            PerceptronWrapper   network     = neuralNetworks[testedPerson];
+            double              error       = 0.0;
+            int                 testCases   = 0;
 
             foreach (Person person in people) {
-                double answer = (person == testedPerson) ? 1.0 : 0.0;
-                var personTestSet = testSet[person];
+                double  answer          = (person == testedPerson) ? 1.0 : 0.0;
+                var     personTestSet   = testSet[person];
 
                 foreach (var testFile in personTestSet) {
                     var testArray = testFile.ToArray();
 
-                    for (int i = 0; i < testArray.Length - algorithmParams.SignalFramesCount; i++) {
-                        for (int j = 0; j < algorithmParams.SignalFramesCount; j++ )
-                            Array.Copy(testArray[i+j], 0, input, j * algorithmParams.MfccCount, algorithmParams.MfccCount);
+                    for (int inputBegining = 0; inputBegining < testArray.Length - algorithmParams.SignalFramesCount; inputBegining++) {
+
+                        CopyInputData(input, testArray, inputBegining);
                         double networkAnswer = network.Compute(new[] { input })[0][0];
 
-                        if (answer > THRESEHOLD || answer < (1.0f - THRESEHOLD)) {
+                        if (answer > THRESHOLD || answer < (1.0f - THRESHOLD)) {
                             error += Math.Pow(answer - networkAnswer, 2.0f);
                             testCases++;
                         }
@@ -647,33 +571,9 @@ namespace NeuralNetworks2.Logic {
             return error / testCases;
         }
 
-        private double HardTest(Person testedPerson, Dictionary<Person, List<double[]>[]> testSet, double[] input) {
-            Debug.Assert(NeuralNetworkOutputSize == 1);
-
-
-            PerceptronWrapper network = neuralNetworks[testedPerson];
-            double error = 0.0d;
-            int testCases = 0;
-
-            foreach (Person person in people) {
-                double answer = (person == testedPerson) ? 1.0 : 0.0;
-                var personTestSet = testSet[person];
-
-                foreach (var testFile in personTestSet) {
-                    var testArray = testFile.ToArray();
-
-                    for (int i = 0; i < testArray.Length - algorithmParams.SignalFramesCount; i++) {
-                        for (int j = 0; j < algorithmParams.SignalFramesCount; j++)
-                            Array.Copy(testArray[i + j], 0, input, j * algorithmParams.MfccCount, algorithmParams.MfccCount);
-                        double networkAnswer = network.Compute(new[] { input })[0][0];
-
-                        error += Math.Pow(answer - networkAnswer, 2.0f);
-                        testCases++;
-                    }
-                }
-            }
-
-            return error / testCases;
+        private void CopyInputData(double[] destination, double[][] source, int start) {
+            for (int j = 0; j < algorithmParams.SignalFramesCount; j++)
+                Array.Copy(source[start + j], 0, destination, j * algorithmParams.MfccCount, algorithmParams.MfccCount);
         }
     }
 }

@@ -1,0 +1,346 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc} 	% Kodowanie UTF8
+\usepackage[MeX]{polski} 		% Wsparcie dla PL
+\usepackage[pdftex]{graphicx} 	% Wsparcie dla obrazkow
+\usepackage{url} 				% Polecenie /url
+\usepackage{multirow}  			% Mozliwosc uzycia multirow w tabelce na stronie tytulowej
+\usepackage{array}				% Tabele o wiekszych mozliwosciach
+\usepackage{subfig}
+\usepackage{latexsym}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+\floatname{algorithm}{Algorytm}
+
+% -------------------------------------
+% INFORMACJE O DOKUMENCIE
+% -------------------------------------
+\author{Marcin Chwedczuk \and Albert Skłodowski}
+\title{Rozpoznawanie Mówcy za Pomocą Sieci Neuronowych}
+\date{5 Styczeń 2012}
+
+\begin{document}
+	\maketitle
+	\tableofcontents
+	
+\section{Zadanie Rozpoznawania Mówcy}
+	Celem naszego projektu była ocena przydatności sieci neuronowych
+	w zadaniu rozpoznawania mówcy. TODO!
+
+\section{Zbiór Danych Uczących i Walidacyjnych}
+\section{Opis Zastosowanych Algorytmów}
+
+	\subsection{Opis Wykorzystywanej Sieci Neuronowej}
+	
+	W stworzonej przez nas aplikacji przyjęliśmy następującą architekturę systemu:
+	Dla każdej osoby(oznaczmy ją $P$) która ma być rozpoznawana przez aplikację zostanie stworzona osobna
+	sieć neuronowa $net_P$. Sieć ta będzie uczona odpowiedzi 1 dla próbek głosu osoby $P$ oraz 
+	odpowiedzi 0 dla próbek głosu pozostałych osób. 
+	Wszystkie sieci będą uczone i testowane w ten sam sposób.  
+	
+	Każda z sieci $net_i$ będzie siecią typu perceptron wielowarstwowy oraz będzie posiadać
+	dwie warstwy ukryte. O wielkości warstw ukrytych będą decydować parametry $D_1$ oraz $D_2$
+	w następujący sposób:
+	\[ size(hidden_1) = \frac{size(input)}{D_1} \]
+	\[ size(hidden_2) = \frac{size(input)}{D_2} \] 
+	gdzie $size(hidden_1)$, $size(hidden_2)$ to odpowiednio rozmiary I i II warstwy ukrytej
+	a $size(input)$ to rozmiar wejścia. Zazwyczaj będziemy przyjmować $1 \leq D_1 < D_2$.
+	Każda z sieci będzie posiadała dokładnie jedno wyjście zwracające wartości z przedziału $[0, 1]$.
+	
+	W opisanych wyżej sieciach będziemy stosować neurony o sigmoidalnej funkcji aktywacji 
+	($f(x) = \frac{1}{1+\exp(-x)}$), dodatkowo będziemy stosować wzmocnienie(bias).
+	
+	Każda z sieci będzie uczona za pomocą standardowego algorytmu wstecznej propagacji błędów
+	(backpropagation). W algorytmie backpropagation będziemy stosować
+	stopniowy rozpad współczynnika nauki oraz momentu, zgodnie z wzorami:
+	\[ \eta_i = \frac{\eta}{\sqrt{(1 + i)}} \]
+	\[ \mu_i = \frac{\mu}{\sqrt{(1 + i)}} \]
+	gdzie $\eta$ oznacza współczynnik nauki, $\mu$ współczynnik
+	momentu, a $i$ to oczywiście numer iteracji. Zazwyczaj będziemy przyjmować $\mu = \frac{\eta}{2}$.
+	
+	W dalszej części dokumentu gdy nie będzie powiedziane inaczej będziemy przyjmować
+	że $D_1$ = 4, $D_2$ = 8, $\eta = 0.21$ a $\mu = 0.1$.
+	
+	Sieci neuronowe w naszej aplikacji zostały zaimplementowane za pomocą darmowej do
+	zastosowań niekomercyjnych biblioteki Encog w wersji 3.0.1.
+	
+	\subsubsection*{Algorytm obliczania błędu sieci na zbiorze walidacyjnym}
+	\begin{algorithm}[h]
+		\begin{algorithmic}[1]
+		\STATE \textbf{input} testedPerson
+		\STATE
+		\STATE error $\leftarrow$ 0
+		\STATE count $\leftarrow \epsilon$ \{ Epsilon is a small number e.g. 0.0001\}
+		\FORALL{person $\in$ People}
+			\STATE answer $\leftarrow$ 0
+			\IF{person $=$ testedPerson}
+				\STATE answer $\leftarrow$ 1			
+			\ENDIF		
+			\STATE	
+			\STATE \COMMENT{testSet - Array containing mfcc coefficients for consecutive voice frames}			
+			\STATE testSet $\leftarrow$ GetPersonTestSet(person)
+			\FOR{$0 \leq start < length(testSet) -$ FRAMES-COUNT}
+				\STATE netInput $\leftarrow$ testSet$[$start$ .. ($start $+$ FRAMES-COUNT$-1)]$
+				\STATE netAnswer = $network_{person}($netInput$)$
+				\IF{netAnswer $>$ T \textbf{or} netAnswer $<$ (1 - T)}
+					\STATE error $\leftarrow$ error + $($netAnswer - answer$)^2$
+					\STATE count $\leftarrow$ count + 1
+				\ENDIF
+			\ENDFOR	
+		\ENDFOR
+		\STATE
+		\RETURN error $/$ count
+		\end{algorithmic}			
+		\caption{Algorytm obliczający błąd sieci neuronowej na zadanym zbiorze testowym}
+		\label{alg:nnerror}
+	\end{algorithm}
+	Przedstawiony na listingu \ref{alg:nnerror} sposób obliczania błędu  sieci neuronowej
+	opiera się na standardowym błędzie średnio kwadratowym, z tym że odpowiedzi sieci które
+	znajdują się zbyt blisko wartości 0.5 nie są uwzględnia przy liczeniu błędu. Co ma sens 
+	ponieważ nie są one uwzględniane również przy typowaniu najbardziej prawdopodobnego mówcy.
+	
+	W wielu miejscach będziemy prezentować błąd aplikacji(czyli całego zestawu sieci) na zbiorze uczącym
+	lub walidacyjnym, błąd ten będzie obliczany jako średnia arytmetyczna z błędów poszczególnych sieci
+	na zadanym zbiorze.
+	
+	\subsection{Opis Algorytmu Ekstrakcji Cech}
+	
+		\subsubsection*{Opis Danych Wejściowych Algorytmu}
+		Algorytm ekstrakcji cech operuje na pojedynczych próbkach dźwięku.
+		Każda próbka niezależnie do długości jest reprezentowana jako 
+		tablica liczb zmiennoprzecinkowych o wartościach z przedziału $[-1, 1]$.
+		Algorytm zakłada ponadto że próbki zostały otrzymane przez kwantyzacje
+		sygnału ciągłego ze stałą częstotliwością próbkowania równą $F$.
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=\textwidth,trim= 3cm 0cm 6cm 0cm, clip]{./img/mfcc_wave}
+			\caption{Reprezentacja sygnału ciągłego za pomocą tablicy liczb zmiennoprzecinkowych.
+			Kolejne elementy tablicy zawierają wartości kolejnych próbek sygnału, i tak element o
+			indeksie 0 zawiera wartość 0.0, element o indeksie 1 wartość 0.31,
+			element o indeksie 2 wartość 0.43 itd.}
+			\label{fig:sndwave}
+		\end{figure}
+		Konwersji plików WAVE na wyżej opisany format dokonaliśmy za pomocą darmowej biblioteki
+		NAudio.
+		
+		\subsubsection*{Normowanie Sygnału Wejściowego}
+		Okazuje się że w zależność od mówcy (a także jego nastroju, czy zmęczenia), oddalenia od mikrofonu
+		oraz innych czynników można otrzymać dość znaczne różnice w amplitudzie nagrywanych sygnałów
+		dźwiękowych. Aby wyeliminować wpływ amplitudy sygnału na jakość klasyfikacji wszystkie przetwarzane
+		sygnały przed ekstrakcją cech są poddawane normowaniu. 
+		Algorytm normujący sygnał wejściowy został przedstawiony
+		na listingu \ref{alg:normsignal}. 
+		\begin{algorithm}[h]
+			\begin{algorithmic}[1]
+				\STATE \COMMENT{$samples_i$ - Array containing voice samples}
+				\STATE empth $\leftarrow$ 1.0
+				\STATE max $\leftarrow max_i(samples_i)$
+				\STATE min $\leftarrow min_i(samples_i)$
+				\STATE
+				\IF{$|min| > \epsilon$}
+					\STATE emph $\leftarrow$ $\max(emph, \frac{1}{|min|})$
+				\ENDIF
+				\IF{$|max| > \epsilon$}
+					\STATE emph $\leftarrow \min(emph, \frac{1}{|max|});$
+				\ENDIF
+				\STATE
+				\FORALL{i}
+					\STATE $samples_i \leftarrow emph \cdot samples_i$
+				\ENDFOR
+			\end{algorithmic}			
+			\caption{Algorytm wykorzystywany do unormowania wartości sygnału wejściowego}
+			\label{alg:normsignal}
+		\end{algorithm}
+		
+		\subsubsection*{Algorytm Ekstrakcji Cech}
+		W tej części dokumentu przedstawimy algorytmy służące do 
+		wyodrębniania charakterystycznych cech mowy, omówimy również
+		towarzyszące im parametry. Tabel \ref{tab:ftextractparams} zawiera
+		opis parametrów algorytmów, listingi \ref{alg:ftextract}, \ref{alg:extractframe}
+		oraz \ref{alg:getmfcc} prezentują pseudokody wykorzystywanych algorytmów.
+		\begin{table}[h]
+			\centering
+			\begin{tabular}{|p{2.5cm}|c|p{6cm}|}
+				\hline
+				Parametr & Optymalna wartość & Opis parametru \\
+				\hline \hline
+				WINDOW-SIZE & 512 - 1024 & Określa ile próbek tworzy pojedynczą
+				ramkę. Wielkość okna powinna być tak dobrana żeby czas trwania ramki
+				wynosił od 10 do 30 milisekund. Wartość tego parametru powinna być potęgą liczby 2\\
+				\hline
+				WINDOW-OVERLAP & 256 - 512 & Określa ile próbek współdzielą ze sobą sąsiadujące ramki\\
+				\hline
+				SPEAK\-POWER\-THRESHOLD & 0.02 - 0.06 & Parametr określa minimalną energie jaką musi
+				posiadać sygnał dźwiękowy żeby został uznany za część wypowiedzi \\
+				\hline
+				MFCC-COUNT & 6 - 16 & Ilość używanych współczynników MFCC \\				
+				\hline
+				$|\bigtriangleup|$ & 24 - 27 & Ilość używanych filtrów trójkątnych. Filtry pokrywają
+				pasmo częstotliwości od 0~Hz do 8~kHz zgodnie ze skalą MEL. Aby utworzyć zbiór filtrów
+				wymagana jest znajomość częstotliwości próbkowania $F$, oraz rozmiar ramki WINDOW-SIZE. 
+				Rysunek \ref{fig:trifilter} przedstawia przepustowość oraz rozmieszczenie
+				przykładowego zestawu filtrów \\
+				\hline				
+				$\bigtriangleup_i^n$ & & Przepustowość filtra o numerze $n$ dla częstotliwości odpowiadającej
+				$i$-temu wyjściu transformacji Furiera \\
+				\hline
+			\end{tabular}			
+			\caption{Opis parametrów algorytmu ekstrakcji cech}
+			\label{tab:ftextractparams}
+		\end{table}
+		\begin{figure}[h]
+			\includegraphics[width=\textwidth,trim= 0cm 0cm 0cm 0cm, clip]{./img/triFilter}
+			\caption{Położenie i przepustowość banku filtrów trójkątnych rozłożonych zgodnie 
+			ze skalą MEL na przedziale częstotliwości 0Hz - 8kHz}
+			\label{fig:trifilter}
+		\end{figure}
+		
+		\begin{algorithm}[h]
+			\begin{algorithmic}[1]
+				\STATE \textbf{input} samples $:$ \textbf{array} $[0 .. (N-1)]$ \textbf{of double}
+				\STATE
+				\STATE \COMMENT{Type \textbf{mfcc} is used to represent array of MFCC coefficients}
+				\STATE \textbf{type mfcc} $=$ \textbf{array} $[0 .. ($MFCC-COUNT$-1)]$ \textbf{of double}
+				\STATE features	$:$ \textbf{list} \textbf{of mfcc}			
+				\STATE start $\leftarrow 0$
+				\STATE delta $\leftarrow$ WINDOW-SIZE $-$ WINDOW-OVERLAP
+				\STATE
+				\WHILE{start $<$ N - WINDOW-SIZE}
+					\STATE frame $\leftarrow$ ExtractFrame(samples, start)
+					\STATE power $\leftarrow \sum_i |frame_i| /$ WINDOW-SIZE
+					\IF{power $>$ SPEAK-POWER-THRESHOLD}
+						\STATE mfcc $\leftarrow$ GetMFCC(frame)
+						\STATE \textbf{append} mfcc \textbf{to} features
+					\ENDIF					
+					\STATE start $\leftarrow$ start + delta
+				\ENDWHILE
+				\STATE
+				\RETURN features
+			\end{algorithmic}			
+			\caption{Algorytm wykorzystywany do ekstrakcji cech z sygnału wejściowego}
+			\label{alg:ftextract}
+		\end{algorithm}	
+		\begin{algorithm}[h]
+			\begin{algorithmic}[1]
+				\STATE \textbf{input} samples $:$ \textbf{array} $[0 .. (N-1)]$ \textbf{of double}
+				\STATE \textbf{input} start $:$ \textbf{integer}
+				\STATE
+				\STATE frame $:$ \textbf{array} $[0 .. ($WINDOW-SIZE$-1)]$ \textbf{of double}
+				\FOR{$0 \leq i < $ WINDOW-SIZE}
+					\STATE $frame_i$ = $samples_{start+i}$
+				\ENDFOR
+				\STATE
+				\RETURN frame
+			\end{algorithmic}			
+			\caption{ExtractFrame - Procedura pomocnicza}
+			\label{alg:extractframe}
+		\end{algorithm}	
+		\begin{algorithm}[h]
+			\begin{algorithmic}[1]
+				\STATE \textbf{input} frame $:$ \textbf{array} $[0 .. (N-1)]$ \textbf{of double}
+				\STATE
+				\FOR{$0 \leq i < N$}
+					\STATE $hamming_i \leftarrow 0.54 - 0.46 \cos(\frac{2\pi i}{N - 1})$
+					\STATE $frame_i \leftarrow hamming_i \cdot frame_i$
+				\ENDFOR
+				\STATE
+				\STATE $furier \leftarrow$ \textbf{FFT} $(frame)$
+				\FOR{$0 \leq i < N$}
+					\STATE $furier_i \leftarrow |furier_i|$
+				\ENDFOR
+				\STATE
+				\FOR{$0 \leq i < |\bigtriangleup|$}
+					\STATE $sum_i \leftarrow 0$
+					\FOR{$0 \leq j < N$}
+						\STATE $sum_i \leftarrow sum_i + \bigtriangleup_j^i \cdot furier_j$					
+					\ENDFOR
+					\STATE $sum_i \leftarrow \log_{10}(sum_i)$
+				\ENDFOR
+				\STATE
+				\STATE \COMMENT{Return only first MFCC-COUNT elements of array returned by DCT}
+				\RETURN \textbf{DCT}(sum)
+			\end{algorithmic}			
+			\caption{GetMFCC - Algorytm obliczania współczynników MFCC dla danej ramki}
+			\label{alg:getmfcc}
+		\end{algorithm}	
+
+	
+	\subsection{Opis Algorytmu Rozpoznawania Mówcy}
+	
+		Listing \ref{alg:recognise} zawiera pseudokod algorytmu wykorzystywanego 
+		do wytypowania najbardziej prawdopodobnego mówcy, tabela \ref{tab:srparams}
+		zawiera opis parametrów występujących w algorytmie.
+		\begin{table}[h]
+			\centering
+			\begin{tabular}{|c|c|p{6cm}|}
+				\hline
+				Parametr & Optymalna wartość & Opis parametru \\
+				\hline \hline
+				$T$ & unknown & Próg wiarygodności sieci neuronowej. Odpowiedz sieci będzie
+				uznana za znaczącą wtedy gdy będzie należeć do sumy przedziałów $[0, 1-T]$ oraz
+				$[T, 1]$ \\
+				\hline
+				Features & & Tablica współczynników MFCC dla ramek rozpoznawanego sygnału mowy \\
+				\hline
+				People & & Zbiór osób rozpoznawanych przez klasyfikator \\
+				\hline
+				$network_{person}$ & & Sieć neuronowa nauczona rozpoznawania osoby $person$ oraz 
+				odrzucania pozostałych osób \\
+				\hline
+				FRAMES-COUNT & 6 - 16 & Parametr określający ile kolejnych ramek 
+				(a raczej odpowiadających im tablic
+				współczynników MFCC) jest podawanych na wejście sieci neuronowej. Wielkość wejścia sieci
+				można policzyć mnożąc FRAMES-COUNT przez MFCC-COUNT \\
+				\hline
+			\end{tabular}			
+			\caption{Opis parametrów algorytmu wyboru zwycięzcy}
+			\label{tab:srparams}
+		\end{table}		
+		\begin{algorithm}
+			\begin{algorithmic}[1]
+				\STATE \textbf{input} Features $:$ \textbf{array} $[0 .. (N-1)]$ \textbf{of mfcc}
+				\STATE				
+				\STATE total $\leftarrow$ 0
+				\FORALL{person $\in$ People}
+					\STATE $result_{person}$ $\leftarrow$ 0
+				\ENDFOR
+				\STATE
+				\FORALL{0 $\leq$ start $<$ N - FRAMES-COUNT}
+					\STATE \COMMENT{Skopiuj elementy tablicy features do tablicy netinput}
+					\STATE \COMMENT{Kopiujemy również oba indeksy graniczne}
+					\STATE netinput $\leftarrow$ Features$[$start$ .. ($start $+$ FRAMES-COUNT$-1)]$
+					\STATE
+					\FORALL{person $\in$ People}
+						\STATE answer = $network_{person}($netinput$)$
+						\IF{answer $>$ T \textbf{or} answer $<$ (1 - T)}
+							\IF{answer $>$ T}
+								\STATE $result_{person}$ $\leftarrow$ $result_{person}$ $+$ answer
+								\STATE total $\leftarrow$ total + 1
+							\ELSE
+								\STATE $result_{person}$ $\leftarrow$ $result_{person}$ $+$ (answer - 1)
+							\ENDIF
+							\STATE \COMMENT{Notice that total is incremented only in the first branch}
+						\ENDIF	
+					\ENDFOR
+				\ENDFOR
+				\STATE
+				\FORALL{person $\in$ People}
+					\STATE $result_{person}$ $\leftarrow$ $max(0, result_{person} / total)$
+				\ENDFOR
+				\STATE \textbf{sort descend} person \textbf{by} $result_{person}$
+			\end{algorithmic}			
+			\caption{RecogniseSpeaker - Algorytm rozpoznawania mówcy}
+			\label{alg:recognise}
+		\end{algorithm}
+	
+\section{Omówienie Uzyskanych Wyników}
+	\subsection{Metodologia testowania}
+	\subsection{Wpływ Parametrów na Rezultaty}
+	\subsection{Uzyskane Wyniki}
+\section{Podsumowanie}
+
+\end{document}

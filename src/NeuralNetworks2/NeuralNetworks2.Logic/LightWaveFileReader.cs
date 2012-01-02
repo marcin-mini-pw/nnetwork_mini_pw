@@ -5,10 +5,8 @@ using System.Diagnostics;
 using System;
 
 
-namespace NeuralNetworks2.Logic
-{
-    internal class LightWaveFileReader
-    {
+namespace NeuralNetworks2.Logic {
+    internal class LightWaveFileReader {
         private const int MONO_SOUND = 1;
 
 
@@ -37,8 +35,7 @@ namespace NeuralNetworks2.Logic
         /// 
         /// </summary>
         /// <param name="path">Nazwa pliku WAVE (*.wav)</param>
-        public LightWaveFileReader(string path)
-        {
+        public LightWaveFileReader(string path) {
             ReadWaveFile(path);
         }
 
@@ -46,8 +43,7 @@ namespace NeuralNetworks2.Logic
         /// 
         /// </summary>
         /// <param name="stream">Strumień z zapisanym dźwiękiem w formacie *.wav.</param>
-        public LightWaveFileReader(Stream stream)
-        {
+        public LightWaveFileReader(Stream stream) {
             ReadWaveFile(stream);
         }
 
@@ -55,10 +51,9 @@ namespace NeuralNetworks2.Logic
         /// <summary>
         /// Normalizuje sample dzwieku do zakresu -1..1
         /// </summary>
-        public void NormalizeWaveSamples()
-        {
+        public void NormalizeWaveSamples() {
             const float EPSILON = 0.0001f;
-            const float NOISE_LEVEL_COEF = 0.03f;
+            const float NOISE_LEVEL_COEF = 0.0f;
 
             SamplesCount = SoundSamples.Length;
 
@@ -69,20 +64,17 @@ namespace NeuralNetworks2.Logic
             // 0 => 0, pomocne przy ustalaniu mocy sygnau
             float emph = 1.0f;
             if (Math.Abs(min) > EPSILON)
-                emph = Math.Max(emph, 1.0f/Math.Abs(min));
+                emph = Math.Max(emph, 1.0f / Math.Abs(min));
 
             if (Math.Abs(max) > EPSILON)
-                emph = Math.Min(emph, 1.0f/Math.Abs(max));
+                emph = Math.Min(emph, 1.0f / Math.Abs(max));
 
-            if (emph > 1.0f)
-            {
+            if (emph > 1.0f) {
                 SoundSamples = SoundSamples
-                    .Select(x =>
-                                {
-                                    if (x > NOISE_LEVEL_COEF)
-                                    {
+                    .Select(x => {
+                                    //if (x > NOISE_LEVEL_COEF) {
                                         x *= emph;
-                                    }
+                                    //}
                                     return x;
                                 })
                     .ToArray();
@@ -90,27 +82,22 @@ namespace NeuralNetworks2.Logic
         }
 
 
-        private void ReadWaveFile(string path)
-        {
+        private void ReadWaveFile(string path) {
             Debug.WriteLine("Load file: {0}", path);
-            using (var waveReader = new WaveFileReader(path))
-            {
+            using (var waveReader = new WaveFileReader(path)) {
                 ReadWaveFileHelper(waveReader);
             }
         }
 
-        private void ReadWaveFile(Stream stream)
-        {
-            using (var waveReader = new WaveFileReader(stream))
-            {
+        private void ReadWaveFile(Stream stream) {
+            using (var waveReader = new WaveFileReader(stream)) {
                 ReadWaveFileHelper(waveReader);
             }
 
             stream.Dispose(); // tak na wszelki wypadek
         }
 
-        private void ReadWaveFileHelper(WaveFileReader waveReader)
-        {
+        private void ReadWaveFileHelper(WaveFileReader waveReader) {
             Frequency = waveReader.WaveFormat.SampleRate;
             Bits = waveReader.WaveFormat.BitsPerSample;
             SamplesCount = (int)waveReader.SampleCount;

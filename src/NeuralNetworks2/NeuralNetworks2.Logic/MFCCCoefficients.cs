@@ -1,5 +1,9 @@
-﻿using System;
+﻿// Copyright Marcin Chwedczuk & Albert Sklodowski
+// 
+using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Collections.Generic;
 using Complex = alglib.complex;
 
 namespace NeuralNetworks2.Logic
@@ -11,7 +15,7 @@ namespace NeuralNetworks2.Logic
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static double[] GetMFCC(double sampleFrequency, double[] data, double[][] filtersBank, int coffCount, out double signalPower)
+        public static double[] GetMFCC(double sampleFrequency, double[] data, double[][] filtersBank, int coffCount)
         {
             // 1. Hamming Window
             ApplyHammingWindow(data); 
@@ -27,7 +31,6 @@ namespace NeuralNetworks2.Logic
             // dla probki  rozmiaru k realFft[i] reprezentuje czestotliwosc
             // i * sampleFrequency / k
             double[] realFft = ExtractSignalPower(fft);
-            signalPower = realFft[0];
 
             // 3. Filtracja trojkatami z banku filtrow
             double[] logEnergy = FilterData(sampleFrequency, realFft, filtersBank);
@@ -35,6 +38,8 @@ namespace NeuralNetworks2.Logic
             // 4. DCT
             double[] mfcc = GetDCT(logEnergy, coffCount);
 
+            // Danger
+            // NormalizeData(mfcc);
             return mfcc;
         }
 
@@ -142,6 +147,14 @@ namespace NeuralNetworks2.Logic
             for (int n = 0; n < data.Length; n++)
             {
                 data[n] *= 0.54f - 0.46f * (float)Math.Cos((2.0 * Math.PI * n) / (N - 1));
+            }
+        }
+
+        private static void NormalizeData(double[] data) {
+            double sum = Math.Sqrt( data.Sum(x => x*x) );
+            if (sum > 0.0001) {
+                for (int i = 0; i < data.Length; i++)
+                    data[i] /= sum;
             }
         }
     }
