@@ -14,6 +14,7 @@
 \usepackage{algorithmic}
 \usepackage{float}
 \usepackage{algorithm}
+\usepackage{color}
 
 \floatname{algorithm}{Algorytm}
 
@@ -409,6 +410,24 @@ Stworzona przez nas aplikacja umożliwia testowanie nauczonych sieci neuronowych
 \section{Omówienie Uzyskanych Wyników}
 	\subsection{Metodologia testowania}
 	\subsection{Wpływ Parametrów na Rezultaty}
+		\subsubsection*{Zależność błędu od ilości uczonych osób}	
+			\begin{figure}[h]
+				\centering
+				\includegraphics[width=\textwidth,trim= 3cm 0cm 3cm 0cm, clip]{./img/b_od_lo}
+				\caption{Średni błąd sieci na zbiorze walidacyjnym w zależności od liczby uczonych osób.
+				Na \textcolor{red}{czerwono} wykreślono linie regresji. Zauważmy że w przyjętej metodologii
+				liczenia błędu błąd rzędu 0.16 powoduje że odpowiedzi sieci różnią się od oczekiwanych
+				o około $\sqrt{0.16} = 0.4$ co praktycznie uniemożliwia działanie aplikacji.}
+				\label{fig:bodilos}
+			\end{figure}
+			\begin{figure}[h]
+				\centering
+				\includegraphics[width=\textwidth,trim= 1cm 0cm 1cm 0cm, clip]{./img/b_od_lo2}
+				\caption{Pierwiastek błędu sieci na zbiorze walidacyjnym w zależności od liczby uczonych osób.
+				Na \textcolor{red}{czerwono} wykreślono linie regresji. Błąd rzędu $0.35$ przy THRESHOLD równym
+				$0.65$ jest akceptowalny.}
+				\label{fig:bodilosd}
+			\end{figure}
 	\subsection{Uzyskane Wyniki}
 \section{Podsumowanie}
 
