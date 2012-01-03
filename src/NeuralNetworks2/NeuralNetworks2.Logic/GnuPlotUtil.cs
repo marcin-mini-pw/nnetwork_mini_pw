@@ -10,7 +10,7 @@ namespace NeuralNetworks2.Logic {
     /// Obsluga gnuplota
     /// </summary>
     class GnuPlot {
-        private const string GNU_PLOT_PATH = @"d:\tools\gnuplot\binary\gnuplot.exe";
+        private const string GNU_PLOT_PATH = @"E:\Projekty\nnetwork_mini_pw\src\NeuralNetworks2\gnuplot\binary\gnuplot.exe";
 
         private string _plotTitle;
         private string _plotPath;

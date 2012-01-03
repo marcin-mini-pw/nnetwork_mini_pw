@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NeuralNetworks2.API.Model;
 
 namespace NeuralNetworks2.UI.ViewModels
@@ -45,6 +46,19 @@ namespace NeuralNetworks2.UI.ViewModels
                 }
                 testsResults = value;
                 OnPropertyChanged<TestsResultsWindowViewModel>(x => x.TestsResults);
+                OnPropertyChanged<TestsResultsWindowViewModel>(x => x.AllErrorsArithmeticMean);
+            }
+        }
+
+        public double AllErrorsArithmeticMean
+        {
+            get
+            {
+                return testsResults != null
+                           ? testsResults
+                                 .Select(x => x.Value)
+                                 .Average()
+                           : 0d;
             }
         }
 

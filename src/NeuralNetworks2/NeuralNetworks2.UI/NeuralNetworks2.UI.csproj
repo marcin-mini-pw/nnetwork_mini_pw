@@ -55,6 +55,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\TrainingStageToStringConverter.cs" />
+    <Compile Include="ViewModels\TrainingProgressViewModel.cs" />
+    <Compile Include="Views\TrainingProgressView.xaml.cs">
+      <DependentUpon>TrainingProgressView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\AlgorithmInitWindow.xaml.cs">
       <DependentUpon>AlgorithmInitWindow.xaml</DependentUpon>
     </Compile>
@@ -80,6 +85,10 @@
     <Compile Include="Windows\TestsResultsWindow.xaml.cs">
       <DependentUpon>TestsResultsWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="Views\TrainingProgressView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Windows\AlgorithmInitWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -147,9 +156,7 @@
       <Name>NeuralNetworks2.Logic</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Converters\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Resource Include="Images\Person_NoPhotoAvailable.png" />
   </ItemGroup>

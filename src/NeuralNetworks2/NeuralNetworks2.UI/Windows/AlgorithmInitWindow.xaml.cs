@@ -23,6 +23,13 @@ namespace NeuralNetworks2.UI.Windows
         }
 
 
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            AlgorithmInitWindowViewModel.CancelTraining();
+            base.OnClosing(e);
+        }
+
+
         private void AlgorithmInitWindowViewModel_RequestClose(object sender, EventArgs e)
         {
             DialogResult = true;

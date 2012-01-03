@@ -44,6 +44,31 @@
                     <DiscreteObjectKeyFrame KeyTime="00:00:00.3" Value="{x:Static Visibility.Hidden}"/>
                 </ObjectAnimationUsingKeyFrames>
             </Storyboard>
+
+            <Storyboard x:Key="ShowTrainingProgressBorderStoryboard">
+                <DoubleAnimationUsingKeyFrames
+                    BeginTime="00:00:00"
+                    Storyboard.TargetName="TrainingProgressBorder"
+                    Storyboard.TargetProperty="(UIElement.Opacity)"
+                    >
+                    <SplineDoubleKeyFrame KeyTime="00:00:00" Value="0"/>
+                    <SplineDoubleKeyFrame KeyTime="00:00:00.3" Value="1"/>
+                </DoubleAnimationUsingKeyFrames>
+                <ObjectAnimationUsingKeyFrames
+                    BeginTime="00:00:00"
+                    Storyboard.TargetName="TrainingProgressBorder"
+                    Storyboard.TargetProperty="(UIElement.Visibility)"
+                    >
+                    <DiscreteObjectKeyFrame KeyTime="00:00:00" Value="{x:Static Visibility.Visible}"/>
+                </ObjectAnimationUsingKeyFrames>
+                <ObjectAnimationUsingKeyFrames
+                    BeginTime="00:00:00"
+                    Storyboard.TargetName="GetLogicFromFileButton"
+                    Storyboard.TargetProperty="(UIElement.Visibility)"
+                    >
+                    <DiscreteObjectKeyFrame KeyTime="00:00:00" Value="{x:Static Visibility.Collapsed}"/>
+                </ObjectAnimationUsingKeyFrames>
+            </Storyboard>
         </Grid.Resources>
         
         <Grid.RowDefinitions>
@@ -55,6 +80,7 @@
             Grid.Row="0"
             >
             <Button
+                x:Name="GetLogicFromFileButton"
                 HorizontalAlignment="Left"
                 Width="300"
                 Content="Wczytaj z pliku"
@@ -118,11 +144,29 @@
                     <Button
                         Content="Rozpocznij naukę"
                         Command="{Binding StartLearningCommand}"
-                        />
+                        >
+                        <Button.Triggers>
+                            <EventTrigger
+                                RoutedEvent="Button.Click"
+                                >
+                                <BeginStoryboard Storyboard="{StaticResource ShowTrainingProgressBorderStoryboard}" />
+                            </EventTrigger>
+                        </Button.Triggers>
+                    </Button>
                 </StackPanel>
                 
                 <views:AlgorithmParamsView />
             </DockPanel>
+        </Border>
+
+        <Border
+            x:Name="TrainingProgressBorder"
+            Grid.Row="1"
+            Visibility="Hidden"
+            Background="White"
+            >
+            
+            <views:TrainingProgressView />
         </Border>
     </Grid>
 </Window>

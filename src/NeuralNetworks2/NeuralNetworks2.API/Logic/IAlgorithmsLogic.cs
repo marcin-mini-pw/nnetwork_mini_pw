@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using NeuralNetworks2.API.Events;
 using NeuralNetworks2.API.Model;
 
 namespace NeuralNetworks2.API.Logic
 {
     public interface IAlgorithmsLogic
     {
+        /// <summary>
+        /// Zdarzenie informujące, że nastąpił progres w nauce sieci.
+        /// </summary>
+        event EventHandler<TrainingProgressEventArgs> TrainingProgressChanged;
+
         /// <summary>
         /// Inicjalizuje logikę (w praktyce: buduje sieci neuronowe).
         /// </summary>

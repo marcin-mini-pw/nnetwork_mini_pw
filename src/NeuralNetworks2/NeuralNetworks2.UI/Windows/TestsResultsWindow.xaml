@@ -16,6 +16,18 @@
             Width="150"
             />
         
+        <StackPanel
+            DockPanel.Dock="Bottom"
+            Orientation="Horizontal"
+            >
+            <TextBlock
+                Text="Średni błąd: "
+                />
+            <TextBlock
+                Text="{Binding AllErrorsArithmeticMean}"
+                />
+        </StackPanel>
+
         <ListView
             ItemsSource="{Binding TestsResults}"
             >

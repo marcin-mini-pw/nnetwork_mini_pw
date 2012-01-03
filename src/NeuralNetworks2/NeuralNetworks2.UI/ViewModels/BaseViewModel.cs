@@ -14,6 +14,24 @@ namespace NeuralNetworks2.UI.ViewModels
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
+            PropertyChangedHelper(propertyName, (handler, sender, args) => handler(sender, args));
+        }
+
+        protected virtual void OnPropertyChangedDispatcher(string propertyName)
+        {
+            PropertyChangedHelper(propertyName, 
+                (handler, sender, args) => handler(sender, args));
+        }
+
+        protected virtual void OnPropertyChanged<T>(Expression<Func<T, object>> e)
+        {
+            OnPropertyChanged(PropertyHelper.GetPropertyName(e));
+        }
+
+
+        private void PropertyChangedHelper(string propertyName,
+            Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> callHandler)
+        {
             var handler = PropertyChanged;
             if (handler == null)
             {
@@ -21,12 +39,7 @@ namespace NeuralNetworks2.UI.ViewModels
             }
 
             var e = new PropertyChangedEventArgs(propertyName);
-            handler(this, e);
-        }
-
-        protected virtual void OnPropertyChanged<T>(Expression<Func<T, object>> e)
-        {
-            OnPropertyChanged(PropertyHelper.GetPropertyName(e));
+            callHandler(handler, this, e);
         }
     }
 }
