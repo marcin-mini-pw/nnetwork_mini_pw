@@ -42,11 +42,11 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Prog powyzej ktorego uznajemy odpowiedz sieci za znaczaca.
         /// </summary>
-        private const double THRESHOLD = 0.65;
+        private const double THRESHOLD = 0.65; // 0.65
 
         /// <summary>
         /// Ile razy mniej (w stosunku do liczby wejść) ma być w kolejnych warstwach sieci neuronowych?
-        /// </summary> // 8 16 domyslny
+        /// </summary> // 4 8 domyslny
         private static readonly double[] HiddenLayerNeuronsCountCoefs = new double[] { 4d, 8d };
 
         /// <summary>
