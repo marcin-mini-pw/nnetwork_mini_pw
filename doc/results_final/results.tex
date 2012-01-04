@@ -349,11 +349,11 @@ Stworzona przez nas aplikacja umożliwia testowanie nauczonych sieci neuronowych
 				\hline
 				Parametr & Optymalna wartość & Opis parametru \\
 				\hline \hline
-				$T$ & unknown & Próg wiarygodności sieci neuronowej. Odpowiedz sieci będzie
+				$T$ & 0.65 $\pm$ 0.05 & Próg wiarygodności sieci neuronowej. Odpowiedz sieci będzie
 				uznana za znaczącą wtedy gdy będzie należeć do sumy przedziałów $[0, 1-T]$ oraz
 				$[T, 1]$ \\
 				\hline
-				Features & & Tablica współczynników MFCC dla ramek rozpoznawanego sygnału mowy \\
+				Features &  & Tablica współczynników MFCC dla ramek rozpoznawanego sygnału mowy \\
 				\hline
 				People & & Zbiór osób rozpoznawanych przez klasyfikator \\
 				\hline
@@ -409,6 +409,42 @@ Stworzona przez nas aplikacja umożliwia testowanie nauczonych sieci neuronowych
 	
 \section{Omówienie Uzyskanych Wyników}
 	\subsection{Metodologia testowania}
+	
+	Dla wszystkich przedstawionych w dalszej części dokumentu testów jako 
+	konfigurację bazową przyjmiemy następujące wartości parametrów sieci neuronowej:
+	\begin{table}[h]
+			\centering
+			\begin{tabular}{|c|p{8cm}|}
+				\hline
+				Parametr &  Wartość \\
+				\hline \hline
+				$D_1$, $D_2$ & Parametry te mają odpowiednio wartości 4 i 8 \\
+				\hline
+				MAX-ERROR & Wartość 0.0 \\
+				\hline
+				T & Wartość 0.65 \\
+				\hline
+				WINDOW-SIZE & Wartość 512 \\
+				\hline
+				OVERLAP & Wartość 256 \\
+				\hline
+				TCOEF & Wartość 0.5 \\
+				\hline
+				MAX-ITERATIONS & Wartość 160 tysięcy \\
+				\hline
+				$\eta$, $\mu$ & 0.2109, 0.105 \\
+				\hline
+				FRAMES-COUNT & 6 \\
+				\hline
+				MFCC-COUNT & 12 \\
+				\hline
+				$|\bigtriangleup|$ & 24 (Ilość filtrów) \\
+				\hline
+			\end{tabular}			
+			\caption{Bazowa konfiguracja testowa programu}
+			\label{tab:testparams}
+		\end{table}	
+			
 	\subsection{Wpływ Parametrów na Rezultaty}
 		\subsubsection*{Zależność błędu od ilości uczonych osób}	
 			\begin{figure}[h]
@@ -416,19 +452,205 @@ Stworzona przez nas aplikacja umożliwia testowanie nauczonych sieci neuronowych
 				\includegraphics[width=\textwidth,trim= 3cm 0cm 3cm 0cm, clip]{./img/b_od_lo}
 				\caption{Średni błąd sieci na zbiorze walidacyjnym w zależności od liczby uczonych osób.
 				Na \textcolor{red}{czerwono} wykreślono linie regresji. Zauważmy że w przyjętej metodologii
-				liczenia błędu błąd rzędu 0.16 powoduje że odpowiedzi sieci różnią się od oczekiwanych
-				o około $\sqrt{0.16} = 0.4$ co praktycznie uniemożliwia działanie aplikacji.}
+				liczenia błędu, błąd rzędu 0.16 powoduje że odpowiedzi sieci różnią się od oczekiwanych
+				o około $\sqrt{0.16} = 0.4$ co praktycznie uniemożliwia działanie aplikacji przy T równym
+				0.65. Z kolei zbyt wysoka wartość T może spowodować że wyniki będą w dużej mierze losowe.}
 				\label{fig:bodilos}
 			\end{figure}
 			\begin{figure}[h]
 				\centering
 				\includegraphics[width=\textwidth,trim= 1cm 0cm 1cm 0cm, clip]{./img/b_od_lo2}
 				\caption{Pierwiastek błędu sieci na zbiorze walidacyjnym w zależności od liczby uczonych osób.
-				Na \textcolor{red}{czerwono} wykreślono linie regresji. Błąd rzędu $0.35$ przy THRESHOLD równym
+				Na \textcolor{red}{czerwono} wykreślono linie regresji. Błąd rzędu $0.35$ przy T równym
 				$0.65$ jest akceptowalny.}
 				\label{fig:bodilosd}
 			\end{figure}
-	\subsection{Uzyskane Wyniki}
-\section{Podsumowanie}
+			Wzrost liczby osób rozpoznawanych przez sieć powoduje wzrost błędu
+			zespołu sieci neuronowych. Możemy przyjąć że rozpoznawanie powyżej sześciu osób obarczone jest
+			znacznych błędem, przy T równym 0.65.
+			
+	\subsection{Przebieg nauki zespołu sieci neuronowych}
+		Wykres \ref{fig:ttresults} przedstawiony w tej części dokumentu 
+		prezentuje błąd sieci w zależności od liczby iteracji
+		algorytmu backpropagation. Widzimy że w niektórych przypadkach nauka sieci jest 
+		praktycznie niemożliwa co jest spowodowane złą jakością zebranych próbek (np. różny
+		charakter głosu danej osoby w każdej próbce). Dodatkowo w przypadku niektórych osób widać
+		wyraźny rozdźwięk pomiędzy błędem na zbiorze uczącym i walidacyjnym, oznacza to że
+		zbiór walidacyjny zawiera istotne cechy głosu danej osoby nieobecne w zbiorze uczącym.
+		Wynika z stąd że próbki uczące powinny być jak najdłuższe oraz jak najbardziej różnorodne (tj. zawierać
+		jak najwięcej różnych sylab),
+		przy zachowaniu tej samej barwy oraz tempa wypowiedzi - co niestety nie jest zbyt praktycznym założeniem.
+	\subsection{Jakość rozpoznawania w zależności od odległości mówcy od mikrofonu}
+		Z doświadczeń płynących z pracy z aplikacją wynika że zmniejszenie odległości od mikrofonu 
+		pozytywnie wpływa na jakość rozpoznawania. Okazuje się jednak że odległość (w ograniczonym zakresie
+		wartości) nie ma aż tak dużego znaczenia dla odpowiedzi sieci neuronowej. Wykresy
+		\ref{fig:netansblisko} oraz \ref{fig:netansdaleko} przedstawiają odpowiedzi sieci dla dwóch badanych
+		odległości (szczegóły w opisach rysunków). W przypadku I aplikacją była trochę bardziej pewna rozpoznawanej
+		osoby (25\% w stosunku do 20\% w drugim przypadku).
+	 
+		\clearpage
+		\newpage	
+		\thispagestyle{empty}
+		\addtolength{\voffset}{-105pt}
+	
+		\begin{figure}[h]	
+  		\centering
+\subfloat[Adrian Sroka]{\includegraphics[scale=0.25]{./img/plot_Adrian_Sroka.png}}
+\subfloat[Albert Skłodowski]{\includegraphics[scale=0.25]{./img/plot_Albert_Sklodowski.png}}\\
+\subfloat[Andrzej Legucki]{\includegraphics[scale=0.25]{./img/plot_Andrzej_Legucki.png}}
+\subfloat[Artur Adamek]{\includegraphics[scale=0.25]{./img/plot_Artur_Adamek.png}}\\
+\subfloat[Janusz Paprzycki]{\includegraphics[scale=0.25]{./img/plot_Janusz_Paprzycki.png}}
+\subfloat[Julian Zubek]{\includegraphics[scale=0.25]{./img/plot_Julian_Zubek.png}}\\
+\subfloat[Mai Hoa Pham]{\includegraphics[scale=0.25]{./img/plot_Mai_Hoa_Pham.png}}
+\subfloat[Marcin Chwedczuk]{\includegraphics[scale=0.25]{./img/plot_Marcin_Chwedczuk.png}}\\
+\subfloat[Michał Okulewicz]{\includegraphics[scale=0.25]{./img/plot_Michal_Okulewicz.png}}
+\subfloat[Tomek Sitarek]{\includegraphics[scale=0.25]{./img/plot_Tomek_Sitarek.png}}
+  		\caption{Wykresy przedstawiają wielkość błędu w zależności od liczby iteracji.
+  		Kolorem \textcolor{blue}{niebieskim} wykreślono błąd na zbiorze walidacyjnym,
+  		a kolorem \textcolor{red}{czerwonym} na zbiorze uczącym.
+  		Oś Y przedstawia błąd średniokwadratowy, oś X liczbę iteracji nauki.}
+  		\label{fig:ttresults}
+	\end{figure}
+	\clearpage
+	
+	\newpage	
+	\thispagestyle{empty}
+		\begin{figure}[h]	
+  		\centering
+\subfloat[Adrian Sroka]{\includegraphics[scale=0.25]{./img/blisko/rplot_Adrian_Sroka.png}}
+\subfloat[Albert Skłodowski]{\includegraphics[scale=0.25]{./img/blisko/rplot_Albert_Sklodowski.png}}\\
+\subfloat[Andrzej Legucki]{\includegraphics[scale=0.25]{./img/blisko/rplot_Andrzej_Legucki.png}}
+\subfloat[Artur Adamek]{\includegraphics[scale=0.25]{./img/blisko/rplot_Artur_Adamek.png}}\\
+\subfloat[Janusz Paprzycki]{\includegraphics[scale=0.25]{./img/blisko/rplot_Janusz_Paprzycki.png}}
+\subfloat[Julian Zubek]{\includegraphics[scale=0.25]{./img/blisko/rplot_Julian_Zubek.png}}\\
+\subfloat[Mai Hoa Pham]{\includegraphics[scale=0.25]{./img/blisko/rplot_Mai_Hoa_Pham.png}}
+\subfloat[Marcin Chwedczuk]{\includegraphics[scale=0.25]{./img/blisko/rplot_Marcin_Chwedczuk.png}}\\
+\subfloat[Michał Okulewicz]{\includegraphics[scale=0.25]{./img/blisko/rplot_Michal_Okulewicz.png}}
+\subfloat[Tomek Sitarek]{\includegraphics[scale=0.25]{./img/blisko/rplot_Tomek_Sitarek.png}}
+  		\caption{Wykresy przedstawiają odpowiedzi poszczególnych sieci na 
+  		frazę \textit{Twórcy Oprogramowania Przyszłości}. Fraza została nagrana przy \textbf{niewielkiej} (ok. 5cm)
+  		odległości ust od mikrofonu. Oś X odpowiada początkowemu indeksowi zestawu 12 ramek MFCC. Osobą
+  		mówiącą był Marcin Chwedczuk}
+  		\label{fig:netansblisko}
+	\end{figure}	
+	
+	\clearpage
+	\newpage	
+	\thispagestyle{empty}
+		\begin{figure}[h]	
+  		\centering
+\subfloat[Adrian Sroka]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Adrian_Sroka.png}}
+\subfloat[Albert Skłodowski]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Albert_Sklodowski.png}}\\
+\subfloat[Andrzej Legucki]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Andrzej_Legucki.png}}
+\subfloat[Artur Adamek]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Artur_Adamek.png}}\\
+\subfloat[Janusz Paprzycki]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Janusz_Paprzycki.png}}
+\subfloat[Julian Zubek]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Julian_Zubek.png}}\\
+\subfloat[Mai Hoa Pham]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Mai_Hoa_Pham.png}}
+\subfloat[Marcin Chwedczuk]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Marcin_Chwedczuk.png}}\\
+\subfloat[Michał Okulewicz]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Michal_Okulewicz.png}}
+\subfloat[Tomek Sitarek]{\includegraphics[scale=0.25]{./img/polmetra/rplot_Tomek_Sitarek.png}}
+  		\caption{Wykresy przedstawiają odpowiedzi poszczególnych sieci na 
+  		frazę \textit{Twórcy Oprogramowania Przyszłości}. Fraza została nagrana przy \textbf{dużej} (ok. 55cm)
+  		odległości ust od mikrofonu. Oś X odpowiada początkowemu indeksowi zestawu 12 ramek MFCC. Osobą
+  		mówiącą był Marcin Chwedczuk}
+  		\label{fig:netansdaleko}
+	\end{figure}	
+	
+	\clearpage
+	\newpage
+	\addtolength{\voffset}{105pt}
+	\subsection{Średni błąd na zbiorze walidacyjnym w zależności od parametru T}
+		Przy testowani parametru T aplikacja będzie uczona rozpoznawania pięciu osób.
+		Przypomnijmy że dla T = 0.5 żadne odpowiedzi sieci nie są odrzucane.
+		\begin{figure}[h]	
+  		\centering
+\subfloat[Błąd aplikacji]{\includegraphics[width=\textwidth,trim= 3cm 0cm 3cm 0cm, clip]{./img/Tnorm}}\\
+\subfloat[Pierwiastek z błędu aplikacji]{\includegraphics[width=\textwidth,trim= 3cm 0cm 3cm 0cm, clip]{./img/Tnorm2}}
+  		\caption{Wykresy przedstawiają średni błąd aplikacji oraz pierwiastek z tego błędu w
+  		zależności od wartości parametru T}
+  		\label{fig:texp1}
+	\end{figure}
+	Całkiem nieoczekiwanie okazało się że ustawienie T = 0.5 nieznacznie zmniejsza błąd 
+	sieci na zbiorze walidacyjnym. Podejrzewamy jednak że nie przełoży się to na skuteczność klasyfikacji,
+	gdyż z naszego doświadczenia z pracy z aplikacją oraz śledzenia wykresów, wynika że wartość T nie
+	powinna być ustalana poniżej 0.6. Wygląda na to że parametr T wymaga dalszych badań, 
+	w rzeczywistym środowisku testowym (sala w której odbywają się zajęcia).
+		
+	\subsection{Średni błąd na zbiorze walidacyjnym w zależności wielkości sieci neuronowej}
+		Poniższa tabela zawiera zestawienie wielkości błędu oraz parametrów $D_1$, $D_2$ 
+		sterujących architekturą sieci. Sieć była uczona rozpoznawania pięciu osób.
+		Z poniższych danych można wyprowadzić konkluzje że błąd na zbiorze walidacyjnym 
+		maleje wraz z wzrostem rozmiaru sieci (mniejsze $D$), dzieje się to kosztem 
+		wydłużonego czasu nauki (nawet rzędu 60 minut!).
+		\begin{table}[h]
+			\centering
+			\begin{tabular}{|c|c|p{6cm}|}
+				\hline
+				$D_1$ & $D_2$ & Wielkość błędu \\
+				\hline \hline
+				\hline
+					2 & 2 & 0.1226 \\
+				\hline
+					2 & 4 & 0.1224 \\
+				\hline
+					4 	& 4 & 0.1308 \\
+				\hline
+					3 & 5 & 0.1297 \\
+				\hline
+					4 & 8 & 0.1329 \\
+				\hline
+					8 & 16 & 0.14967 \\
+				\hline
+			\end{tabular}			
+			\caption{Błąd w zależności od architektury sieci}
+			\label{tab:srparams}
+		\end{table}
+		
+	\subsection{Błąd na zbiorze walidacyjnym w zależności od FRAMES-COUNT}
+	\begin{figure}[h]	
+  		\centering
+		\includegraphics[width=\textwidth,trim= 3cm 0cm 3cm 0cm, clip]{./img/mfcc}
+  		\caption{Wykres prezentuje zależność błędu na zbiorze walidacyjnym od współczynnika
+  		FRAMES-COUNT}
+  		\label{fig:mfcc1}
+	\end{figure}
+	Na rysunku \ref{fig:mfcc1} przedstawiono zależność błędu na zbiorze walidacyjnym od wartości 
+	współczynnika FRAMES-COUNT. Z wykresu wynika że wraz z wzrostem parametru błąd ulega zmniejszeniu.
+	Wydaje się że optymalna wartość tego parametru wynosi 12 (dalszy wzrost powoduje jedynie niewielką
+	poprawę błędu w stosunku do zwiększonego czasu potrzebnego na naukę sieci).
+		
+	\subsection{Błąd na zbiorze walidacyjnym w zależności od MFCC-COUNT}
+	\begin{figure}[h]	
+  		\centering
+		\includegraphics[width=\textwidth,trim= 3cm 0cm 3cm 0cm, clip]{./img/mfcc2}
+  		\caption{Wykres prezentuje zależność błędu na zbiorze walidacyjnym od współczynnika
+  		MFCC-COUNT}
+  		\label{fig:mfcc2}
+	\end{figure}
+	Na rysunku \ref{fig:mfcc2} przedstawiono zależność błędu na zbiorze walidacyjnym od wartości 
+	współczynnika FRAMES-COUNT. Z wykresu wynika że wraz z wzrostem parametru błąd ulega zmniejszeniu.
+	Wydaje się że optymalna wartość tego parametru wynosi 12.
+		
+\section*{Bibliografia}
+	\begin{itemize}
+		\item
+			Brian J. Love, Jennifer Vining, Xuening Sun. \textit{Automatic speaker recognition using neural networks}
+		\item Lindasalwa Muda, Mumtaj Begam,I. Elamvazuthi. \textit{Voice Recognition Algorithms using Mel Frequency Cepstral Coefficient (MFCC) and Dynamic Time Warping (DTW) Techniques}
+		\item
+			Todor Ganchev, Nikos Fakotakis, George Kokkinakis. \textit{Comparative Evaluation of Various MFCC Implementations on the Speaker Verification Task}
+		\item
+			Audacity, \url{http://audacity.sourceforge.net}
+		\item	
+			NAudio, \url{http://naudio.codeplex.com} 
+		\item
+			ALGLIB, \url{http://www.alglib.net}
+		\item
+			Encog, \url{http://www.heatonresearch.com/encog}
+	\end{itemize}
+	
+	\vfill
+	\begin{flushright}
+	$\clubsuit$ \textsc{THE END}
+	\end{flushright}
 
 \end{document}
