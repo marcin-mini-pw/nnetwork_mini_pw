@@ -6,6 +6,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading;
+using NeuralNetworks2.API.Enums;
+using NeuralNetworks2.API.Events;
 using NeuralNetworks2.API.Exceptions;
 using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.API.Model;
@@ -37,7 +40,7 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Maksymalna liczba iteracji uczenia pojedynczej sieci.
         /// </summary>
-        private const int MaxIterationCounts = 160000;//400000;
+        private const int MaxIterationCounts = 160000;
 
         /// <summary>
         /// Prog powyzej ktorego uznajemy odpowiedz sieci za znaczaca.
@@ -95,6 +98,10 @@ namespace NeuralNetworks2.Logic {
         /// Czy trwa nagrywanie dźwięków z mikrofonu.
         /// </summary>
         private bool WasAudioRecordingStarted { get; set; }
+
+
+        [field: NonSerialized]
+        public event EventHandler<TrainingProgressEventArgs> TrainingProgressChanged;
 
 
         public AlgorithmsLogic() {
@@ -155,12 +162,14 @@ namespace NeuralNetworks2.Logic {
 
             var result = new Dictionary<Person, double>();
 
-            Dictionary<Person, List<double[]>[]> trainingMfccs = GetAllPeopleTrainingDataMfccs();
-            Dictionary<Person, List<double[]>[]> testMfccs = GetAllPeopleTestDataMfccs();
+            Dictionary<Person, List<double[]>[]> trainingMfccs = GetAllPeopleTrainingDataMfccs(0);
+            Dictionary<Person, List<double[]>[]> testMfccs = GetAllPeopleTestDataMfccs(people.Count);
 
             double[] input = new double[GetNetworksInputSize()];
             double[][] answer = new double[][] { new double[1] };
 
+            int i = 0;
+            CallTrainingProgressChanged(TrainingStage.TrainingNetworks, people.Count, i);
             foreach (Person person in people) {
                 Debug.WriteLine("Train person: {0}", person.FirstName, null);
 
@@ -168,11 +177,25 @@ namespace NeuralNetworks2.Logic {
                 TrainPersonNeuralNetwork(trainingMfccs, testMfccs, input, answer, person, network);
 
                 result.Add(person, TestPersonNeuralNetwork(person, testMfccs, input));
+
+                CallTrainingProgressChanged(TrainingStage.TrainingNetworks, people.Count, ++i);
             }
 
             WasTrained = true;
             PrintTotalError(result);
             return result;
+        }
+
+        private void CallTrainingProgressChanged(TrainingStage stage, double max, double value)
+        {
+            var temp = TrainingProgressChanged;
+            if (temp == null)
+            {
+                return;
+            }
+
+            var args = new TrainingProgressEventArgs(stage, value, max, 0d);
+            temp(this, args);
         }
 
         private void PrintTotalError(Dictionary<Person, double> result) {
@@ -192,7 +215,7 @@ namespace NeuralNetworks2.Logic {
 
             GnuPlot plot = new GnuPlot(
                 person.FullName,
-                @"d:\tmp\plot_" + person.FullName.Replace(' ', '_') + ".png"
+                @"D:\GIT\nnetwork_mini_pw\charts\plot_" + person.FullName.Replace(' ', '_') + ".png"
                 );
             plot.BeginPlot();
 
@@ -230,9 +253,10 @@ namespace NeuralNetworks2.Logic {
                     double learnResult  = TestPersonNeuralNetwork(person, trainingMfccs, input);
                     AddPlotPoint(plot, iterations, learnResult, testResult);
 
-                   // if (testResult <= TestSetMaxError) {
-                   //     break;
-                   //  }
+                    if (testResult <= TestSetMaxError)
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -393,7 +417,7 @@ namespace NeuralNetworks2.Logic {
         }
 
         private static string GetRecognitionPlotFileName(Person person) {
-            return @"d:\tmp\rplot_" + person.FullName.Replace(' ', '_') + ".png";
+            return @"D:\GIT\nnetwork_mini_pw\charts\rplot_" + person.FullName.Replace(' ', '_') + ".png";
         }
 
 
@@ -424,16 +448,20 @@ namespace NeuralNetworks2.Logic {
             return layers;
         }
 
-        private Dictionary<Person, List<double[]>[]> GetAllPeopleTrainingDataMfccs() {
-            return GetAllPeopleMfccsHelper(p => p.TrainWavesPaths);
+        private Dictionary<Person, List<double[]>[]> GetAllPeopleTrainingDataMfccs(int countingProgressInitCount)
+        {
+            return GetAllPeopleMfccsHelper(p => p.TrainWavesPaths, countingProgressInitCount);
         }
 
-        private Dictionary<Person, List<double[]>[]> GetAllPeopleTestDataMfccs() {
-            return GetAllPeopleMfccsHelper(p => p.TestWavesPaths);
+        private Dictionary<Person, List<double[]>[]> GetAllPeopleTestDataMfccs(int countingProgressInitCount)
+        {
+            return GetAllPeopleMfccsHelper(p => p.TestWavesPaths, countingProgressInitCount);
         }
 
         private Dictionary<Person, List<double[]>[]> GetAllPeopleMfccsHelper(
-            Func<Person, ObservableCollection<string>> getWavesPaths) {
+            Func<Person, ObservableCollection<string>> getWavesPaths, int countingProgressInitCount) {
+
+            CallTrainingProgressChanged(TrainingStage.ComputingMFCC, people.Count << 1, countingProgressInitCount);
 
             var mfccs = new Dictionary<Person, List<double[]>[]>();
             foreach (Person person in people) {
@@ -445,17 +473,25 @@ namespace NeuralNetworks2.Logic {
                 }
 
                 mfccs.Add(person, personMfccs);
+                CallTrainingProgressChanged(TrainingStage.ComputingMFCC, people.Count << 1, ++countingProgressInitCount);
             }
 
             return mfccs;
         }
 
-        private List<double[]> GetMfccsFromFile(string path) {
+        private List<double[]> GetMfccsFromFile(string path)
+        {
             LightWaveFileReader wave = null;
-            try {
+            try
+            {
                 wave = new LightWaveFileReader(path);
             }
-            catch (Exception ex) {
+            catch (ThreadAbortException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
                 throw new WaveFileException(path, ex.Message, ex);
             }
 
@@ -499,7 +535,7 @@ namespace NeuralNetworks2.Logic {
         /// <summary>
         /// Kiedy uznajemy ze na wejsciu jest sygnal mowy
         /// </summary>
-        const double SPEAK_POWER_THRESHOLD = 0.022; //0.05; // Ustalone empirycznie
+        const double SPEAK_POWER_THRESHOLD = 0.03; //0.05; // Ustalone empirycznie
 
         /// <summary>
         /// Zwaraca liste wsp. mfcc dla kolejnych ramek sgnalu mowy

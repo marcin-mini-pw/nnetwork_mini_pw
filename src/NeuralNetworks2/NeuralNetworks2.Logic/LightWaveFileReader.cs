@@ -53,7 +53,7 @@ namespace NeuralNetworks2.Logic {
         /// </summary>
         public void NormalizeWaveSamples() {
             const float EPSILON = 0.0001f;
-            const float NOISE_LEVEL_COEF = 0.0f;
+            const float NOISE_LEVEL_COEF = 0.3f;
 
             SamplesCount = SoundSamples.Length;
 
@@ -72,9 +72,9 @@ namespace NeuralNetworks2.Logic {
             if (emph > 1.0f) {
                 SoundSamples = SoundSamples
                     .Select(x => {
-                                    //if (x > NOISE_LEVEL_COEF) {
+                                    if (Math.Abs(x) > NOISE_LEVEL_COEF) {
                                         x *= emph;
-                                    //}
+                                    }
                                     return x;
                                 })
                     .ToArray();

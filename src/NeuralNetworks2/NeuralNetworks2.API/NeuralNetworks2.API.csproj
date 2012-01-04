@@ -44,6 +44,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums\TrainingStage.cs" />
+    <Compile Include="Events\TrainingProgressEventArgs.cs" />
     <Compile Include="Exceptions\WaveFileException.cs" />
     <Compile Include="Logic\IFileIOLogic.cs" />
     <Compile Include="Logic\IAlgorithmsLogic.cs" />

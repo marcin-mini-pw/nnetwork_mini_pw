@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using NeuralNetworks2.API.Logic;
 using NeuralNetworks2.UI.Tools;
@@ -15,9 +17,21 @@ namespace NeuralNetworks2.UI.ViewModels
 
         private readonly PeopleViewModel peopleViewModel;
         private readonly AlgorithmParamsViewModel algorithmParamsViewModel;
+        private readonly TrainingProgressViewModel trainingProgressViewModel;
 
         private RelayCommand startLearningCommand;
         private RelayCommand getLogicFromFileCommand;
+
+        private Thread trainingThread;
+
+
+        private static IAlgorithmsLogic AlgorithmsLogic
+        {
+            get
+            {
+                return LogicProvider.Instance.AlgorithmsLogic;
+            }
+        }
 
         /// <summary>
         /// Zwraca instancję viemodelu.
@@ -57,7 +71,24 @@ namespace NeuralNetworks2.UI.ViewModels
             }
         }
 
-        private IFileIOLogic FileIOLogic
+        public TrainingProgressViewModel TrainingProgressViewModel
+        {
+            get
+            {
+                return trainingProgressViewModel;
+            }
+        }
+
+        public bool IsTrainingInProgress
+        {
+            get
+            {
+                return trainingThread != null;
+            }
+        }
+
+
+        private static IFileIOLogic FileIOLogic
         {
             get
             {
@@ -87,6 +118,22 @@ namespace NeuralNetworks2.UI.ViewModels
         }
         
 
+        public void CancelTraining()
+        {
+            if(trainingThread == null)
+            {
+                return;
+            }
+
+            if (TrainingProgressViewModel.IsReportingProgress)
+            {
+                TrainingProgressViewModel.EndReportingProgress();
+            }
+
+            trainingThread.Abort();
+            trainingThread = null;
+        }
+
         /// <summary>
         /// Konstruktor prywatny.
         /// </summary>
@@ -94,20 +141,35 @@ namespace NeuralNetworks2.UI.ViewModels
         {
             peopleViewModel = new PeopleViewModel();
             algorithmParamsViewModel = new AlgorithmParamsViewModel();
+            trainingProgressViewModel = new TrainingProgressViewModel();
         }
 
 
         private void StartLearning()
         {
-            var algorithmsLogic = LogicProvider.Instance.AlgorithmsLogic;
-            algorithmsLogic.Reset();
-            algorithmsLogic.Init(PeopleViewModel.PeopleList, AlgorithmParamsViewModel.AlgorithmParams);
-            var testsResults = algorithmsLogic.Train();             //TODO: zrobić to asynchronicznie
+            AlgorithmsLogic.Reset();
+            AlgorithmsLogic.Init(PeopleViewModel.PeopleList, AlgorithmParamsViewModel.AlgorithmParams);
+            trainingProgressViewModel.StartReportingProgress();
+            trainingThread = new Thread(TrainInSeparateThread);
+            trainingThread.IsBackground = true;
+            trainingThread.Start();
+        }
 
+        private void TrainInSeparateThread()
+        {
+            var testsResults = AlgorithmsLogic.Train();
             TestsResultsWindowViewModel.Instance.TestsResults = testsResults;
-            var testsResultsWindow = new TestsResultsWindow();
-            testsResultsWindow.ShowDialog();
-            OnRequestClose();
+            Application.Current.Dispatcher.Invoke(
+                new Action(() =>
+                                {
+                                    var testsResultsWindow =
+                                        new TestsResultsWindow();
+                                    testsResultsWindow.ShowDialog();
+                                    trainingProgressViewModel.EndReportingProgress();
+                                    trainingThread = null;
+                                    OnRequestClose();
+                                }),
+                DispatcherPriority.Normal);
         }
 
         private bool CanStartLearning()
