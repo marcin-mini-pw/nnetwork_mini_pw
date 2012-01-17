@@ -153,5 +153,10 @@ namespace NeuralNetworks2.API.Model
             info.AddValue(TrainWavesPathsSerName, trainWavesPaths.ToList());
             info.AddValue(TestWavesPathsSerName, testWavesPaths.ToList());
         }
+
+        public override string ToString()
+        {
+            return FullName;
+        }
     }
 }

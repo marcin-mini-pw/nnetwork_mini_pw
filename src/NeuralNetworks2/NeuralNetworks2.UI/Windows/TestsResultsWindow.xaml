@@ -8,41 +8,58 @@
         >
     <DockPanel
         LastChildFill="True"
+        Background="{StaticResource PanelGradientBrush}"
         >
         <Button
             DockPanel.Dock="Bottom"
             Content="Zamknij"
             Command="{Binding CloseCommand}"
             Width="150"
+            Style="{StaticResource RedButtonStyle}"
             />
         
         <StackPanel
             DockPanel.Dock="Bottom"
             Orientation="Horizontal"
+            Margin="0,3"
             >
             <TextBlock
                 Text="Średni błąd: "
+                Foreground="Red"
                 />
             <TextBlock
                 Text="{Binding AllErrorsArithmeticMean}"
+                Foreground="Red"
                 />
         </StackPanel>
+        
+        <TextBlock
+            DockPanel.Dock="Top"
+            Margin="0,3"
+            Foreground="Red"
+            Text="[Osoba, błąd sieci]"
+            />
 
-        <ListView
+        <ListBox
             ItemsSource="{Binding TestsResults}"
+            Background="{StaticResource BlueBlackGradientBrush}"
+            
             >
-            <ListView.View>
-                <GridView>
+            
+            <!--<ListView.View>
+                <GridView
+                    >
                     <GridViewColumn
                         Header="Osoba"
                         DisplayMemberBinding="{Binding Path=Key.FullName}"
-                        />
+                        >
+                    </GridViewColumn>
                     <GridViewColumn
                         Header="Średni błąd sieci"
                         DisplayMemberBinding="{Binding Path=Value}"
                         />
                 </GridView>
-            </ListView.View>
-        </ListView>
+            </ListView.View>-->
+        </ListBox>
     </DockPanel>
 </Window>

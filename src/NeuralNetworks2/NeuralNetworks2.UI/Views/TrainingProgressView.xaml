@@ -16,6 +16,7 @@
         Margin="30"
         >
         <TextBlock
+            Foreground="{StaticResource FontColor}"
             Text="{Binding TrainingStage, Converter={StaticResource TrainingStageConv}, Mode=OneWay}"
             />
         <ProgressBar
@@ -23,6 +24,7 @@
             Maximum="{Binding Maximum}"
             Value="{Binding Value}"
             Height="15"
+            Foreground="Blue"
             />
     </StackPanel>
 </UserControl>

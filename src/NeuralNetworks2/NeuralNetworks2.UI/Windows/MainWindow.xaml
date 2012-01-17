@@ -6,15 +6,18 @@
         Height="600"
         Width="1000"
         WindowStartupLocation="CenterScreen"
+        Background="{StaticResource MainBackgroundBrush}"
         >
     <DockPanel
         LastChildFill="True"
         >
         <Menu
             DockPanel.Dock="Top"
+            Style="{StaticResource MenuStyle}"
             >
             <MenuItem
                 Header="_Plik"
+                Style="{StaticResource MenuItemStyle}"
                 >
                 <MenuItem
                     Header="_Nowy"
@@ -31,6 +34,8 @@
             </MenuItem>
         </Menu>
         
-        <views:ListeningToVoicesView />
+        <views:ListeningToVoicesView
+            Background="{StaticResource PanelGradientBrush}"
+            />
     </DockPanel>
 </Window>

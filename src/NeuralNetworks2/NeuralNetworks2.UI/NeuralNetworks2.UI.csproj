@@ -85,6 +85,10 @@
     <Compile Include="Windows\TestsResultsWindow.xaml.cs">
       <DependentUpon>TestsResultsWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="Styles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\TrainingProgressView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="clr-namespace:NeuralNetworks2.UI.Views"
     Title="Nowy algorytm"
+    Background="{StaticResource MainBackgroundBrush}"
     >
     
     <Grid>
@@ -83,8 +84,10 @@
                 x:Name="GetLogicFromFileButton"
                 HorizontalAlignment="Left"
                 Width="300"
-                Content="Wczytaj z pliku"
+                Content="Wczytaj z pliku..."
                 Command="{Binding GetLogicFromFileCommand}"
+                Style="{StaticResource RedButtonStyle}"
+                Margin="0,0,0,10"
                 />
         </Grid>
         
@@ -92,6 +95,7 @@
             x:Name="PeopleBorder"
             Grid.Row="1"
             Visibility="Visible"
+            Background="{StaticResource PanelGradientBrush}"
             >
             <DockPanel
                 LastChildFill="True"
@@ -102,6 +106,7 @@
                     >
                     <Button
                         Content="Dalej"
+                        Style="{StaticResource RedButtonStyle}"
                         >
                         <Button.Triggers>
                             <EventTrigger
@@ -121,7 +126,7 @@
             x:Name="AlgorithmParamsBorder"
             Grid.Row="1"
             Visibility="Hidden"
-            Background="White"
+            Background="{StaticResource PanelGradientBrush}"
             >
             <DockPanel
                 LastChildFill="True"
@@ -132,6 +137,7 @@
                     >
                     <Button
                         Content="Wstecz"
+                        Style="{StaticResource RedButtonStyle}"
                         >
                         <Button.Triggers>
                             <EventTrigger
@@ -144,6 +150,8 @@
                     <Button
                         Content="Rozpocznij naukę"
                         Command="{Binding StartLearningCommand}"
+                        Style="{StaticResource RedButtonStyle}"
+                        Width="Auto"
                         >
                         <Button.Triggers>
                             <EventTrigger
@@ -163,7 +171,7 @@
             x:Name="TrainingProgressBorder"
             Grid.Row="1"
             Visibility="Hidden"
-            Background="White"
+            Background="{StaticResource PanelGradientBrush}"
             >
             
             <views:TrainingProgressView />

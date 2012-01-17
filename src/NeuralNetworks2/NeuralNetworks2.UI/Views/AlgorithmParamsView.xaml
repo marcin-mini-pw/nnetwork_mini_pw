@@ -8,19 +8,21 @@
     <DockPanel
         LastChildFill="True"
         >
-        <ToolBar
+        <StackPanel
             DockPanel.Dock="Top"
-            ToolBarTray.IsLocked="True"
+            Orientation="Horizontal"
             >
             <Button
-                Content="save"
+                Content="Zapisz..."
                 Command="{Binding SaveToFileCommand}"
+                Style="{StaticResource MenuBlueButtonStyle}"
                 />
             <Button
-                Content="read"
+                Content="Wczytaj..."
                 Command="{Binding GetFromFileCommand}"
+                Style="{StaticResource MenuBlueButtonStyle}"
                 />
-        </ToolBar>
+        </StackPanel>
         
         <Grid
             DataContext="{Binding AlgorithmParams}"
@@ -43,6 +45,14 @@
                         Property="Margin"
                         Value="3"
                         />
+                    <Setter
+                            Property="Foreground"
+                            Value="{StaticResource InputFontColor}"
+                            />
+                    <Setter
+                            Property="Background"
+                            Value="{StaticResource InputBackgroundBrush}"
+                            />
                 </Style>
                 <Style TargetType="{x:Type TextBlock}">
                     <Setter
@@ -53,6 +63,10 @@
                         Property="VerticalAlignment"
                         Value="Center"
                         />
+                    <Setter
+                            Property="Foreground"
+                            Value="{StaticResource FontColor}"
+                            />
                 </Style>
             </Grid.Resources>
             

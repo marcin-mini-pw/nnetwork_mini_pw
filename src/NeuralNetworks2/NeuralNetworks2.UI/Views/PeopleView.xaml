@@ -15,31 +15,37 @@
             Grid.Column="0"
             LastChildFill="True"
             >
-            <ToolBar
+            <StackPanel
                 DockPanel.Dock="Top"
-                ToolBarTray.IsLocked="True"
+                HorizontalAlignment="Stretch"
+                Orientation="Horizontal"
                 >
                 <Button
                     Content="+"
                     Command="{Binding AddNewPersonCommand}"
+                    Style="{StaticResource MenuBlueButtonStyle}"
                     />
                 <Button
                     Content="-"
                     Command="{Binding DeletePersonCommand}"
+                    Style="{StaticResource MenuBlueButtonStyle}"
                     />
                 <Button
-                    Content="save"
+                    Content="Zapisz..."
                     Command="{Binding SaveToFileCommand}"
+                    Style="{StaticResource MenuBlueButtonStyle}"
                     />
                 <Button
-                    Content="read"
+                    Content="Wczytaj..."
                     Command="{Binding GetFromFileCommand}"
+                    Style="{StaticResource MenuBlueButtonStyle}"
                     />
-            </ToolBar>
+            </StackPanel>
             
             <ListBox
                 ItemsSource="{Binding People}"
                 IsSynchronizedWithCurrentItem="True"
+                Background="{StaticResource BlueBlackGradientBrush}"
                 >
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -68,8 +74,12 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            
-            <TextBlock Grid.Row="0">Dane:</TextBlock>
+
+            <TextBlock
+                Grid.Row="0"
+                Foreground="{StaticResource FontColor}"
+                >Dane:
+            </TextBlock>
             
             <StackPanel
                 Grid.Row="1"
@@ -93,6 +103,7 @@
                     Content="Zmień obraz..."
                     Command="{Binding ChangeImageCommand}"
                     Width="120"
+                    Style="{StaticResource BlueButtonStyle}"
                     />
             </StackPanel>
             
@@ -138,11 +149,23 @@
                             Property="Margin"
                             Value="3"
                             />
+                        <Setter
+                            Property="Foreground"
+                            Value="{StaticResource InputFontColor}"
+                            />
+                        <Setter
+                            Property="Background"
+                            Value="{StaticResource InputBackgroundBrush}"
+                            />
                     </Style>
                     <Style TargetType="{x:Type TextBlock}">
                         <Setter
                             Property="HorizontalAlignment"
                             Value="Right"
+                            />
+                        <Setter
+                            Property="Foreground"
+                            Value="{StaticResource FontColor}"
                             />
                     </Style>
                     <Style TargetType="{x:Type DockPanel}">
@@ -199,13 +222,14 @@
                     Grid.Column="1"
                     LastChildFill="True"
                     >
-                    <ToolBar
+                    <StackPanel
                         DockPanel.Dock="Top"
-                        ToolBarTray.IsLocked="True"
+                        Orientation="Horizontal"
                         >
                         <Button
                             Content="+"
                             Command="{Binding AddNewWaveFileCommand}"
+                            Style="{StaticResource MenuBlueButtonStyle}"
                             >
                             <Button.CommandParameter>
                                 <sys:Boolean>True</sys:Boolean>
@@ -214,15 +238,17 @@
                         <Button
                             Content="-"
                             Command="{Binding RemoveWaveFileCommand}"
+                            Style="{StaticResource MenuBlueButtonStyle}"
                             >
                             <Button.CommandParameter>
                                 <sys:Boolean>True</sys:Boolean>
                             </Button.CommandParameter>
                         </Button>
-                    </ToolBar>
+                    </StackPanel>
                     <ListBox
                         ItemsSource="{Binding People.CurrentItem.TrainWavesPaths}"
                         IsSynchronizedWithCurrentItem="True"
+                        Background="{StaticResource InputBackgroundBrush}"
                         /> <!--ItemTemplate="{StaticResource WavePath}"-->
                 </DockPanel>
 
@@ -236,13 +262,14 @@
                     Grid.Column="1"
                     LastChildFill="True"
                     >
-                    <ToolBar
+                    <StackPanel
                         DockPanel.Dock="Top"
-                        ToolBarTray.IsLocked="True"
+                        Orientation="Horizontal"
                         >
                         <Button
                             Content="+"
                             Command="{Binding AddNewWaveFileCommand}"
+                            Style="{StaticResource MenuBlueButtonStyle}"
                             >
                             <Button.CommandParameter>
                                 <sys:Boolean>False</sys:Boolean>
@@ -251,15 +278,17 @@
                         <Button
                             Content="-"
                             Command="{Binding RemoveWaveFileCommand}"
+                            Style="{StaticResource MenuBlueButtonStyle}"
                             >
                             <Button.CommandParameter>
                                 <sys:Boolean>False</sys:Boolean>
                             </Button.CommandParameter>
                         </Button>
-                    </ToolBar>
+                    </StackPanel>
                     <ListBox
                         ItemsSource="{Binding People.CurrentItem.TestWavesPaths}"
                         IsSynchronizedWithCurrentItem="True"
+                        Background="{StaticResource InputBackgroundBrush}"
                         /> <!--ItemTemplate="{StaticResource WavePath}"-->
                 </DockPanel>
             </Grid>

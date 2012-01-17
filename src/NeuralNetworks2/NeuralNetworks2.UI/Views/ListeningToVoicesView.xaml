@@ -12,6 +12,7 @@
         <ListBox
             Grid.Row="0"
             ItemsSource="{Binding Results}"
+            Background="{StaticResource PanelGradientBrush}"
             >
             <ListBox.Resources>
                 <Style
@@ -83,6 +84,7 @@
                             FontSize="20"
                             Text="{Binding Item1.FullName}"
                             HorizontalAlignment="Center"
+                            Foreground="{StaticResource FontColor}"
                             />
                         
                         <TextBlock
@@ -90,6 +92,7 @@
                             FontSize="18"
                             HorizontalAlignment="Center"
                             Text="{Binding Item2, StringFormat=P}"
+                            Foreground="{StaticResource FontColor}"
                             />
                     </Grid>
                 </DataTemplate>
@@ -101,6 +104,7 @@
                 <Style
                     x:Key="ListeningButton"
                     TargetType="{x:Type Button}"
+                    BasedOn="{StaticResource BlueButtonStyle}"
                     >
                     <Setter
                         Property="Width"
